@@ -124,6 +124,24 @@ br.brk {
   .hero-headline {
     font-size: calc(clamp(2.6rem, 5vw, 4.2rem) - 2px) !important;
   }
+  section[data-screen-label="Hero"] p {
+    font-size: calc(1.1rem - 2px) !important;
+  }
+  section[data-screen-label="Problem"] p {
+    font-size: calc(1.02rem - 2px) !important;
+  }
+  section[data-screen-label="Features"] p {
+    font-size: calc(1.02rem - 2px) !important;
+  }
+  section[data-screen-label="How It Works"] p {
+    font-size: calc(0.9rem - 2px) !important;
+  }
+  section[data-screen-label="Social Proof"] p {
+    font-size: calc(1rem - 2px) !important;
+  }
+  section[data-screen-label="Final CTA"] p {
+    font-size: calc(1rem - 2px) !important;
+  }
   .sec-head {
     margin-bottom: 32px !important;
   }
