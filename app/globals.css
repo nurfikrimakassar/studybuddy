@@ -1,0 +1,162 @@
+:root {
+  --bg: #FAF8FC;
+  --bg-lavender: #F3F1FA;
+  --bg-dark: #3A3170;
+  --bg-footer: #1E1B33;
+
+  --brand-dark: #3A3170;
+  --brand-accent: #4B4090;
+
+  --text-heading: #1E1B33;
+  --text-body: #514C6B;
+  --text-muted: #9C97B5;
+  --text-muted-2: #7A7593;
+
+  --text-on-dark: #ffffff;
+  --text-on-dark-soft: #CFC6EA;
+  --text-on-dark-softer: #B8AEDF;
+
+  --border-lavender: #DDD6F3;
+  --border-card: #EAE6F6;
+  --fill-lavender: #EFEBFB;
+
+  --green-bg: #F1F6EF;
+  --green-text: #4E6B4A;
+  --green-dot: #6F8F6B;
+
+  --red-bg: #FBF2F0;
+  --red-text: #9A5347;
+
+  --font-body: 'Manrope', sans-serif;
+  --font-display: 'Newsreader', serif;
+}
+
+html {
+  font-size: 115%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-heading);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--brand-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: #322A66;
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus,
+button:focus,
+a:focus {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--border-lavender);
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+br.brk {
+  display: inline;
+}
+
+/* Reduced motion respected globally: no scroll/hover animation relies on
+   transforms that would need this override, but declared for safety. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-card {
+    max-width: 420px !important;
+  }
+  .hero-mockup {
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 640px) {
+  br.brk {
+    display: none;
+  }
+  section[data-screen-label] {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  div[data-screen-label="Top Bar"] {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  footer[data-screen-label="Footer"] {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .footer-nav {
+    margin-left: 0 !important;
+  }
+  .hero-grid {
+    gap: 40px !important;
+  }
+  .hero-left {
+    gap: 32px !important;
+  }
+  .sec-head {
+    margin-bottom: 32px !important;
+  }
+  .hiw-head {
+    margin-bottom: 36px !important;
+  }
+  .sp-stats {
+    margin-bottom: 44px !important;
+    padding-bottom: 40px !important;
+  }
+  section[data-screen-label="Hero"] {
+    padding-top: 52px !important;
+    padding-bottom: 60px !important;
+  }
+  section[data-screen-label="Problem"] {
+    padding-top: 64px !important;
+    padding-bottom: 64px !important;
+  }
+  section[data-screen-label="Features"] {
+    padding-top: 64px !important;
+    padding-bottom: 64px !important;
+  }
+  section[data-screen-label="How It Works"] {
+    padding-top: 64px !important;
+    padding-bottom: 64px !important;
+  }
+  section[data-screen-label="Social Proof"] {
+    padding-top: 64px !important;
+    padding-bottom: 32px !important;
+  }
+  section[data-screen-label="Final CTA"] {
+    padding-top: 32px !important;
+    padding-bottom: 64px !important;
+  }
+  footer[data-screen-label="Footer"] {
+    padding-top: 64px !important;
+    padding-bottom: 28px !important;
+  }
+}
