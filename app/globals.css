@@ -121,6 +121,9 @@ br.brk {
   .hero-left {
     gap: 32px !important;
   }
+  .hero-headline {
+    font-size: calc(clamp(2.6rem, 5vw, 4.2rem) - 2px) !important;
+  }
   .sec-head {
     margin-bottom: 32px !important;
   }
