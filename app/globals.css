@@ -101,16 +101,16 @@ br.brk {
     display: none;
   }
   section[data-screen-label] {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
   }
   div[data-screen-label="Top Bar"] {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
   }
   footer[data-screen-label="Footer"] {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
   }
   .footer-nav {
     margin-left: 0 !important;
