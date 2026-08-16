@@ -11,6 +11,16 @@ const PRESETS = [
   { label: "15/3", focus: 15, short: 3, long: 10 },
 ];
 
+const inputStyle: React.CSSProperties = {
+  width: 64,
+  padding: "8px 10px",
+  borderRadius: 8,
+  border: "1.5px solid #EAE6F6",
+  fontSize: "0.85rem",
+  fontFamily: "var(--font-body)",
+  textAlign: "center",
+};
+
 function durationFor(mode: Mode, focusMin: number, shortMin: number, longMin: number) {
   if (mode === "focus") return focusMin * 60;
   if (mode === "short") return shortMin * 60;
@@ -45,6 +55,11 @@ export default function PomodoroApp() {
   const [shortMin, setShortMin] = useState(5);
   const [longMin, setLongMin] = useState(15);
 
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customFocus, setCustomFocus] = useState("25");
+  const [customShort, setCustomShort] = useState("5");
+  const [customLong, setCustomLong] = useState("15");
+
   const [running, setRunning] = useState(false);
   const [mode, setMode] = useState<Mode>("focus");
   const [round, setRound] = useState(1);
@@ -56,6 +71,12 @@ export default function PomodoroApp() {
 
   const stateRef = useRef({ mode, round, focusMin, shortMin, longMin });
   stateRef.current = { mode, round, focusMin, shortMin, longMin };
+
+  // Waktu (timestamp asli, bukan hitungan detik) saat fase berjalan ini
+  // seharusnya berakhir. Timer dihitung dari selisih ke waktu ini, bukan
+  // dari decrement per-tick — supaya tetap akurat walau tab di-background
+  // dan browser nge-throttle/nge-pause setInterval-nya.
+  const endAtRef = useRef<number | null>(null);
 
   function refreshStats() {
     fetch("/api/stats/summary")
@@ -83,36 +104,60 @@ export default function PomodoroApp() {
       celebrate();
       logSession(s.focusMin);
       const nextMode: Mode = s.round % 4 === 0 ? "long" : "short";
+      const nextSeconds = durationFor(nextMode, s.focusMin, s.shortMin, s.longMin);
+      endAtRef.current = Date.now() + nextSeconds * 1000;
       setMode(nextMode);
-      setSecondsLeft(durationFor(nextMode, s.focusMin, s.shortMin, s.longMin));
+      setSecondsLeft(nextSeconds);
       setTimeout(refreshStats, 300);
     } else {
       const nextRound = s.mode === "long" ? 1 : s.round + 1;
+      const nextSeconds = durationFor("focus", s.focusMin, s.shortMin, s.longMin);
+      endAtRef.current = Date.now() + nextSeconds * 1000;
       setRound(nextRound);
       setMode("focus");
-      setSecondsLeft(durationFor("focus", s.focusMin, s.shortMin, s.longMin));
+      setSecondsLeft(nextSeconds);
     }
+  }
+
+  // Baca ulang sisa waktu dari endAtRef (bukan decrement manual). Dipanggil
+  // dari interval tiap detik DAN dari event visibilitychange, supaya begitu
+  // balik ke tab ini timer langsung nyusul ke angka yang benar, bukan
+  // nunggu tick berikutnya.
+  function syncFromClock() {
+    if (endAtRef.current === null) return;
+    const remaining = Math.max(0, Math.round((endAtRef.current - Date.now()) / 1000));
+    setSecondsLeft(remaining);
+    if (remaining <= 0) advance();
   }
 
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev > 1) return prev - 1;
-        advance();
-        return 0;
-      });
-    }, 1000);
-    return () => clearInterval(id);
+
+    const id = setInterval(syncFromClock, 1000);
+    document.addEventListener("visibilitychange", syncFromClock);
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", syncFromClock);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
   function toggleRun() {
-    setRunning((r) => !r);
+    setRunning((r) => {
+      const next = !r;
+      if (next) {
+        endAtRef.current = Date.now() + secondsLeft * 1000;
+      } else {
+        endAtRef.current = null;
+      }
+      return next;
+    });
   }
 
   function reset() {
     setRunning(false);
+    endAtRef.current = null;
     setMode("focus");
     setRound(1);
     setSecondsLeft(focusMin * 60);
@@ -126,19 +171,33 @@ export default function PomodoroApp() {
   // countdown normal jalan sampai habis — supaya bisa cepat lihat alur
   // POST /api/pomodoro/session + refresh stats tanpa nunggu 25 menit asli.
   function debugFastForward() {
+    endAtRef.current = Date.now() + 5000;
     setSecondsLeft(5);
     setRunning(true);
   }
 
-  function applyPreset(p: (typeof PRESETS)[number]) {
-    setPreset(p.label);
-    setFocusMin(p.focus);
-    setShortMin(p.short);
-    setLongMin(p.long);
+  function applyDurations(label: string, focus: number, short: number, long: number) {
+    setPreset(label);
+    setFocusMin(focus);
+    setShortMin(short);
+    setLongMin(long);
     setRunning(false);
+    endAtRef.current = null;
     setMode("focus");
     setRound(1);
-    setSecondsLeft(p.focus * 60);
+    setSecondsLeft(focus * 60);
+  }
+
+  function applyPreset(p: (typeof PRESETS)[number]) {
+    setCustomOpen(false);
+    applyDurations(p.label, p.focus, p.short, p.long);
+  }
+
+  function applyCustom() {
+    const focus = Math.max(1, Math.round(Number(customFocus)) || 25);
+    const short = Math.max(1, Math.round(Number(customShort)) || 5);
+    const long = Math.max(1, Math.round(Number(customLong)) || 15);
+    applyDurations("Custom", focus, short, long);
   }
 
   const total = durationFor(mode, focusMin, shortMin, longMin);
@@ -292,32 +351,70 @@ export default function PomodoroApp() {
           borderRadius: 18,
           padding: "20px 24px",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
+          flexDirection: "column",
+          gap: 16,
         }}
       >
-        <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E1B33" }}>Preset interval</div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {PRESETS.map((p) => (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E1B33" }}>Preset interval</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {PRESETS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => applyPreset(p)}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 100,
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  background: preset === p.label ? "#3A3170" : "#F3F1FA",
+                  color: preset === p.label ? "#fff" : "#514C6B",
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
             <button
-              key={p.label}
               type="button"
-              onClick={() => applyPreset(p)}
+              onClick={() => setCustomOpen((o) => !o)}
               style={{
                 padding: "8px 14px",
                 borderRadius: 100,
                 fontSize: "0.82rem",
                 fontWeight: 700,
-                background: preset === p.label ? "#3A3170" : "#F3F1FA",
-                color: preset === p.label ? "#fff" : "#514C6B",
+                background: preset === "Custom" ? "#3A3170" : "#F3F1FA",
+                color: preset === "Custom" ? "#fff" : "#514C6B",
               }}
             >
-              {p.label}
+              Custom
             </button>
-          ))}
+          </div>
         </div>
+
+        {customOpen && (
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap", borderTop: "1px solid #F1EFF9", paddingTop: 16 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 600 }}>Fokus (menit)</span>
+              <input type="number" min={1} value={customFocus} onChange={(e) => setCustomFocus(e.target.value)} style={inputStyle} />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 600 }}>Istirahat pendek</span>
+              <input type="number" min={1} value={customShort} onChange={(e) => setCustomShort(e.target.value)} style={inputStyle} />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 600 }}>Istirahat panjang</span>
+              <input type="number" min={1} value={customLong} onChange={(e) => setCustomLong(e.target.value)} style={inputStyle} />
+            </label>
+            <button
+              type="button"
+              onClick={applyCustom}
+              style={{ background: "#3A3170", color: "#fff", fontWeight: 700, fontSize: "0.82rem", padding: "9px 16px", borderRadius: 10 }}
+            >
+              Terapkan
+            </button>
+          </div>
+        )}
       </div>
 
       <button
