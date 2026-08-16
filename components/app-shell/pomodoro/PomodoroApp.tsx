@@ -84,6 +84,8 @@ export default function PomodoroApp() {
   const [minutesToday, setMinutesToday] = useState(0);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [toast, setToast] = useState("");
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [overlayInfo, setOverlayInfo] = useState({ sessions: 0, minutes: 0 });
 
   const stateRef = useRef({ mode, round, focusMin, shortMin, longMin, totalSessions, completedSessions });
   stateRef.current = { mode, round, focusMin, shortMin, longMin, totalSessions, completedSessions };
@@ -127,23 +129,26 @@ export default function PomodoroApp() {
   function advance() {
     const s = stateRef.current;
     if (s.mode === "focus") {
-      celebrate();
-
       const newCompleted = s.completedSessions + 1;
       const debugPause = pauseAfterNextRef.current;
       // 0 = nggak dibatasi, muter terus. Kalau ditarget, berhenti sendiri
       // begitu jumlah sesi fokus tercapai — nggak nyambung ke istirahat lagi.
       const targetReached = !debugPause && s.totalSessions > 0 && newCompleted >= s.totalSessions;
+      // Confetti + kartu "selesai" cuma pas 1 SET beneran kelar (atau lagi
+      // nge-tes pakai tombol debug) — bukan tiap 1 sesi fokus doang.
+      const isSetComplete = debugPause || targetReached;
+
+      if (isSetComplete) {
+        celebrate();
+        setOverlayInfo({ sessions: debugPause ? 1 : s.totalSessions, minutes: (debugPause ? 1 : s.totalSessions) * s.focusMin });
+        setShowOverlay(true);
+      }
 
       logSession(s.focusMin).then((ok) => {
-        if (targetReached) {
-          showToast(
-            ok
-              ? `🎉 ${s.totalSessions} sesi selesai semua! Sesi terakhir tersimpan.`
-              : "🎉 Semua sesi selesai, tapi sesi terakhir gagal tersimpan."
-          );
-        } else {
+        if (!isSetComplete) {
           showToast(ok ? `✅ Sesi tersimpan (${s.focusMin} menit fokus)` : "⚠️ Gagal simpan sesi — cek Console buat detailnya");
+        } else if (!ok) {
+          showToast("⚠️ Sesi terakhir gagal tersimpan — cek Console buat detailnya");
         }
         if (ok) refreshStats();
       });
@@ -293,6 +298,48 @@ export default function PomodoroApp() {
 
   return (
     <>
+      {showOverlay && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(30,27,51,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 50,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 22,
+              padding: "40px 32px",
+              maxWidth: 360,
+              width: "100%",
+              textAlign: "center",
+              boxShadow: "0 30px 60px -20px rgba(30,27,51,0.4)",
+            }}
+          >
+            <div style={{ fontSize: "2.6rem", marginBottom: 8 }}>🎉</div>
+            <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#1E1B33", marginBottom: 8 }}>
+              Yey! Sesi kamu udah selesai
+            </div>
+            <p style={{ fontSize: "0.92rem", color: "#514C6B", margin: "0 0 24px" }}>
+              {overlayInfo.sessions} sesi fokus · {overlayInfo.minutes} menit total. Mantap!
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowOverlay(false)}
+              style={{ background: "#3A3170", color: "#fff", fontWeight: 700, fontSize: "0.9rem", padding: "12px 28px", borderRadius: 12 }}
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
