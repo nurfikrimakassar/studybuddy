@@ -55,12 +55,12 @@ export default function EnsureSession({ children }: { children: ReactNode }) {
     async function establishFirebaseSession() {
       const auth = getClientAuth();
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          await signInAnonymously(auth);
-          return; // onAuthStateChanged fires again once the anonymous user exists
-        }
-
         try {
+          if (!user) {
+            await signInAnonymously(auth);
+            return; // onAuthStateChanged fires again once the anonymous user exists
+          }
+
           const idToken = await user.getIdToken();
           await fetch("/api/auth/session", {
             method: "POST",
@@ -68,11 +68,16 @@ export default function EnsureSession({ children }: { children: ReactNode }) {
             body: JSON.stringify({ idToken }),
           });
           markLocalSessionReady();
+          unsubscribe();
+          if (!cancelled) setReady(true);
         } catch (err) {
           // eslint-disable-next-line no-console
           console.error("[auth] Gagal sinkronkan session cookie:", err);
-        } finally {
           unsubscribe();
+          // Nggak ada sesi yang jalan, tapi tetap render halamannya —
+          // lebih baik daripada macet selamanya di "Menyiapkan sesi...".
+          // Fitur yang butuh data bakal gagal sendiri-sendiri dan itu
+          // kelihatan di console, bukan bikin seluruh app nggak kebuka.
           if (!cancelled) setReady(true);
         }
       });
