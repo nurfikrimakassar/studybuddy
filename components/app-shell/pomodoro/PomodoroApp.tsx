@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import confetti from "canvas-confetti";
 
 type Mode = "focus" | "short" | "long";
 
@@ -14,6 +15,16 @@ function durationFor(mode: Mode, focusMin: number, shortMin: number, longMin: nu
   if (mode === "focus") return focusMin * 60;
   if (mode === "short") return shortMin * 60;
   return longMin * 60;
+}
+
+function celebrate() {
+  confetti({
+    particleCount: 120,
+    spread: 80,
+    startVelocity: 45,
+    origin: { y: 0.6 },
+    colors: ["#4B4090", "#3A3170", "#6F8F6B", "#B8AEDF"],
+  });
 }
 
 async function logSession(durationMinutes: number) {
@@ -69,6 +80,7 @@ export default function PomodoroApp() {
   function advance() {
     const s = stateRef.current;
     if (s.mode === "focus") {
+      celebrate();
       logSession(s.focusMin);
       const nextMode: Mode = s.round % 4 === 0 ? "long" : "short";
       setMode(nextMode);
