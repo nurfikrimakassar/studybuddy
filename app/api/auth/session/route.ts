@@ -16,10 +16,9 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = await getAdminAuth().verifyIdToken(idToken);
-    if (!decoded.email) {
-      return NextResponse.json({ error: "Token tidak berisi email." }, { status: 400 });
-    }
 
+    // decoded.email kosong untuk sign-in anonim (tamu) — itu wajar, bukan
+    // error. upsertUserFromFirebase menyimpan baris user walau tanpa email.
     const user = await upsertUserFromFirebase({
       firebaseUid: decoded.uid,
       email: decoded.email,

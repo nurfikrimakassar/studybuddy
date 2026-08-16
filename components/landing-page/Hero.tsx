@@ -75,7 +75,7 @@ export default function Hero() {
 
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <a
-              href="/timer"
+              href="/app"
               style={{
                 background: "#3A3170",
                 color: "#fff",

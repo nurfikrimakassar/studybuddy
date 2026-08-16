@@ -1,8 +1,8 @@
 import Logo from "./Logo";
 
 const navLinks = [
-  { label: "Pomodoro Timer", href: "/timer" },
-  { label: "Jadwal & Kalender", href: "/jadwal" },
+  { label: "Pomodoro Timer", href: "/app" },
+  { label: "Jadwal & Kalender", href: "/app/jadwal" },
   { label: "Flashcard & Quiz", href: "#features" },
   { label: "PDF Summarizer", href: "#features" },
 ];
@@ -40,7 +40,7 @@ export default function TopBar() {
         ))}
       </nav>
       <a
-        href="/timer"
+        href="/app"
         style={{
           fontSize: "0.9rem",
           fontWeight: 700,

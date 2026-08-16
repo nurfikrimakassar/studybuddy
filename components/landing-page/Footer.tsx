@@ -15,9 +15,9 @@ const columns = [
   {
     title: "Produk",
     links: [
-      { label: "Site Blocker", href: "#" },
-      { label: "Pomodoro Timer", href: "/timer" },
-      { label: "Jadwal & Kalender", href: "/jadwal" },
+      { label: "Site Blocker", href: "/app/blocker" },
+      { label: "Pomodoro Timer", href: "/app" },
+      { label: "Jadwal & Kalender", href: "/app/jadwal" },
       { label: "Flashcard & Quiz", href: "#" },
       { label: "PDF Summarizer", href: "#" },
     ],
@@ -26,7 +26,7 @@ const columns = [
     title: "Kontak",
     links: [
       { label: "hello@studybuddy.app", href: "mailto:hello@studybuddy.app" },
-      { label: "Buka Aplikasi", href: "/timer" },
+      { label: "Buka Aplikasi", href: "/app" },
       { label: "Instagram", href: "#" },
       { label: "X (Twitter)", href: "#" },
     ],

@@ -1,0 +1,345 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+type Mode = "focus" | "short" | "long";
+
+const PRESETS = [
+  { label: "25/5", focus: 25, short: 5, long: 15 },
+  { label: "50/10", focus: 50, short: 10, long: 20 },
+  { label: "15/3", focus: 15, short: 3, long: 10 },
+];
+
+function durationFor(mode: Mode, focusMin: number, shortMin: number, longMin: number) {
+  if (mode === "focus") return focusMin * 60;
+  if (mode === "short") return shortMin * 60;
+  return longMin * 60;
+}
+
+async function logSession(durationMinutes: number) {
+  try {
+    await fetch("/api/pomodoro/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ durationMinutes, completed: true }),
+    });
+  } catch {
+    // Nggak fatal — statistik cuma nggak nambah, timer tetap jalan.
+  }
+}
+
+export default function PomodoroApp() {
+  const [preset, setPreset] = useState("25/5");
+  const [focusMin, setFocusMin] = useState(25);
+  const [shortMin, setShortMin] = useState(5);
+  const [longMin, setLongMin] = useState(15);
+
+  const [running, setRunning] = useState(false);
+  const [mode, setMode] = useState<Mode>("focus");
+  const [round, setRound] = useState(1);
+  const [secondsLeft, setSecondsLeft] = useState(focusMin * 60);
+
+  const [sessionsToday, setSessionsToday] = useState(0);
+  const [minutesToday, setMinutesToday] = useState(0);
+  const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
+
+  const stateRef = useRef({ mode, round, focusMin, shortMin, longMin });
+  stateRef.current = { mode, round, focusMin, shortMin, longMin };
+
+  function refreshStats() {
+    fetch("/api/stats/summary")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setSessionsToday(data.sessionsToday);
+          setMinutesToday(data.minutesToday);
+        }
+      })
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    refreshStats();
+    fetch("/api/blocked-sites")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setBlockedDomains(data.domains))
+      .catch(() => {});
+  }, []);
+
+  function advance() {
+    const s = stateRef.current;
+    if (s.mode === "focus") {
+      logSession(s.focusMin);
+      const nextMode: Mode = s.round % 4 === 0 ? "long" : "short";
+      setMode(nextMode);
+      setSecondsLeft(durationFor(nextMode, s.focusMin, s.shortMin, s.longMin));
+      setTimeout(refreshStats, 300);
+    } else {
+      const nextRound = s.mode === "long" ? 1 : s.round + 1;
+      setRound(nextRound);
+      setMode("focus");
+      setSecondsLeft(durationFor("focus", s.focusMin, s.shortMin, s.longMin));
+    }
+  }
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev > 1) return prev - 1;
+        advance();
+        return 0;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
+  function toggleRun() {
+    setRunning((r) => !r);
+  }
+
+  function reset() {
+    setRunning(false);
+    setMode("focus");
+    setRound(1);
+    setSecondsLeft(focusMin * 60);
+  }
+
+  function skip() {
+    advance();
+  }
+
+  function applyPreset(p: (typeof PRESETS)[number]) {
+    setPreset(p.label);
+    setFocusMin(p.focus);
+    setShortMin(p.short);
+    setLongMin(p.long);
+    setRunning(false);
+    setMode("focus");
+    setRound(1);
+    setSecondsLeft(p.focus * 60);
+  }
+
+  const total = durationFor(mode, focusMin, shortMin, longMin);
+  const progress = 1 - secondsLeft / total;
+  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const ss = String(secondsLeft % 60).padStart(2, "0");
+  const ringColor = mode === "focus" ? "#4B4090" : "#6F8F6B";
+  const modeLabel = mode === "focus" ? "Fokus" : mode === "short" ? "Istirahat" : "Istirahat Panjang";
+
+  const dots: { width: number; active: boolean }[] = [];
+  for (let i = 1; i <= 4; i++) {
+    const isCurrent = i === round && mode === "focus";
+    const isPast = i < round || (i === round && mode !== "focus");
+    dots.push({ width: 16, active: isPast || isCurrent });
+    if (i < 4) dots.push({ width: 5, active: false });
+  }
+
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
+            Sesi hari ini
+          </div>
+          <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#1E1B33" }}>Pomodoro Timer</div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: running ? "#F1F6EF" : "#F3F1FA",
+            padding: "6px 12px",
+            borderRadius: 100,
+          }}
+        >
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: running ? "#6F8F6B" : "#9C97B5" }} />
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: running ? "#4E6B4A" : "#7A7593" }}>
+            {running ? "Sedang fokus" : "Dijeda"}
+          </span>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #EAE6F6",
+          borderRadius: 22,
+          padding: "40px 24px",
+          boxShadow: "0 30px 60px -30px rgba(58,49,112,0.2)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "min(260px, 60vw)",
+            height: "min(260px, 60vw)",
+            borderRadius: "50%",
+            background: `conic-gradient(${ringColor} ${progress}turn, #E4DEF6 ${progress}turn 1turn)`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 28,
+          }}
+        >
+          <div
+            style={{
+              width: "84%",
+              height: "84%",
+              borderRadius: "50%",
+              background: "#fff",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div style={{ fontSize: "clamp(2.2rem, 8vw, 3.4rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "#1E1B33" }}>
+              {mm}:{ss}
+            </div>
+            <div style={{ fontSize: "0.82rem", color: "#9C97B5", fontWeight: 600, marginTop: 4 }}>
+              {modeLabel} · Ronde {round}/4
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
+          {dots.map((dot, i) => (
+            <div key={i} style={{ width: dot.width, height: 6, borderRadius: 3, background: dot.active ? "#4B4090" : "#DCD5F0" }} />
+          ))}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button
+            type="button"
+            onClick={reset}
+            aria-label="Reset"
+            style={{ width: 48, height: 48, borderRadius: "50%", background: "#F3F1FA", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B4090" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={toggleRun}
+            aria-label={running ? "Jeda" : "Mulai"}
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: "50%",
+              background: "#3A3170",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 12px 24px -8px rgba(58,49,112,0.5)",
+            }}
+          >
+            {running ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" style={{ marginLeft: 3 }}>
+                <path d="M7 4l14 8-14 8z" />
+              </svg>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={skip}
+            aria-label="Lewati"
+            style={{ width: 48, height: 48, borderRadius: "50%", background: "#F3F1FA", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B4090" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4" />
+              <line x1="19" y1="5" x2="19" y2="19" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #EAE6F6",
+          borderRadius: 18,
+          padding: "20px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1E1B33" }}>Preset interval</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {PRESETS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => applyPreset(p)}
+              style={{
+                padding: "8px 14px",
+                borderRadius: 100,
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                background: preset === p.label ? "#3A3170" : "#F3F1FA",
+                color: preset === p.label ? "#fff" : "#514C6B",
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {running && blockedDomains.length > 0 && (
+        <div style={{ background: "#FBF2F0", border: "1px solid #F3DCD6", borderRadius: 16, padding: "18px 22px" }}>
+          <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#9A5347", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+            Diblokir sekarang
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {blockedDomains.map((domain) => (
+              <div key={domain} style={{ background: "#fff", padding: "6px 12px", borderRadius: 100, fontSize: "0.82rem", fontWeight: 600, color: "#9A5347" }}>
+                {domain}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div
+        style={{
+          background: "#3A3170",
+          borderRadius: 18,
+          padding: "22px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#B8AEDF", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
+            Hari ini
+          </div>
+          <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#fff" }}>
+            {sessionsToday} sesi · {minutesToday} menit fokus
+          </div>
+        </div>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CFC6EA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      </div>
+    </>
+  );
+}

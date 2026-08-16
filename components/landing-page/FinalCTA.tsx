@@ -41,7 +41,7 @@ export default function FinalCTA() {
           </p>
           <div style={{ maxWidth: 440, margin: "0 auto" }}>
             <a
-              href="/timer"
+              href="/app"
               style={{
                 display: "inline-block",
                 background: "#3A3170",
