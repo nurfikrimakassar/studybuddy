@@ -8,7 +8,7 @@ Landing page + backend (Tahap 1 roadmap: login Google OAuth, session, database) 
 |---|---|---|
 | Hosting frontend + API | **Vercel** (Hobby plan) | Cukup untuk trafik kecil–menengah |
 | Database | **Neon Postgres** (Storage tab di Vercel) | 0.5 GB storage, 100 compute-hours/bulan |
-| Login | **Firebase Authentication** (Google provider) | Gratis sampai 50rb MAU |
+| Login | **Firebase Authentication** (Google provider) | Gratis, tanpa batas MAU (limit 50rb MAU cuma berlaku buat fitur enterprise SAML/OIDC, bukan Google Sign-In) |
 | PDF Summarizer / Flashcard (Tahap 3, menyusul) | **Gemini API** (aistudio.google.com) | Free tier tersedia, ada rate limit |
 
 Satu-satunya biaya yang mungkin muncul nanti: **Chrome Web Store developer registration** untuk publish extension Site Blocker (Tahap 5) — biaya pendaftaran satu kali, bukan biaya hosting.
