@@ -4,52 +4,27 @@ import { ReactNode, useEffect, useState } from "react";
 import { onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
 
-const CACHE_KEY = "sb_session_ready_at";
-// Sedikit lebih pendek dari umur cookie session (7 hari, lihat lib/auth/session.ts)
-// supaya cache lokal ini nggak pernah "lebih percaya diri" dari cookie aslinya.
-const CACHE_TTL_MS = 6 * 24 * 60 * 60 * 1000;
-
-function hasFreshLocalSession() {
-  if (typeof window === "undefined") return false;
-  const raw = window.localStorage.getItem(CACHE_KEY);
-  if (!raw) return false;
-  const cachedAt = Number(raw);
-  return Number.isFinite(cachedAt) && Date.now() - cachedAt < CACHE_TTL_MS;
-}
-
-function markLocalSessionReady() {
-  window.localStorage.setItem(CACHE_KEY, String(Date.now()));
-}
-
 /**
  * Wraps the app shell's page content. Makes sure every visitor has a
  * Firebase identity (anonymous if they haven't signed in) and that our own
  * session cookie is set BEFORE rendering children — so Pomodoro/Blocker/etc
  * never fire their data calls while the cookie still doesn't exist yet.
  *
- * Three speed tiers, cheapest first:
- * 1. localStorage flag from a previous successful session — zero network
- *    calls, renders instantly. Trade-off: if the cookie was somehow
- *    invalidated server-side, that's only discovered when a feature's own
- *    API call 401s, not up front.
- * 2. GET /api/me — cheap local JWT verify + one indexed row lookup.
- * 3. Full Firebase verifyIdToken + Postgres upsert round trip (slowest,
- *    especially on a cold Neon compute) — only when 1 and 2 both miss.
+ * Two speed tiers, cheapest first:
+ * 1. GET /api/me — cheap local JWT verify + one indexed row lookup.
+ * 2. Full Firebase verifyIdToken + Postgres upsert round trip (slowest,
+ *    especially on a cold Neon compute) — only when 1 misses.
+ *
+ * (No longer caches "ready" in localStorage — that made a broken session
+ * look permanently fine after one failed handshake, since the fast path
+ * would trust the stale flag instead of ever re-checking. Always verifying
+ * against the server is slightly slower but never lies about the actual
+ * cookie state.)
  */
 export default function EnsureSession({ children }: { children: ReactNode }) {
-  // Selalu mulai dari false — walaupun localStorage bilang "fresh", nge-cek
-  // window di initializer useState bikin hasil beda antara render server
-  // (window belum ada) dan render client pertama (window ada), yang bikin
-  // React hydration mismatch. Cache-nya tetap dicek, tapi di dalam
-  // useEffect (jalan sesaat setelah hydration, bukan pas render).
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (hasFreshLocalSession()) {
-      setReady(true);
-      return;
-    }
-
     let cancelled = false;
 
     async function establishFirebaseSession() {
@@ -71,7 +46,6 @@ export default function EnsureSession({ children }: { children: ReactNode }) {
             const body = await res.text().catch(() => "");
             throw new Error(`POST /api/auth/session gagal (${res.status}): ${body}`);
           }
-          markLocalSessionReady();
           unsubscribe();
           if (!cancelled) setReady(true);
         } catch (err) {
@@ -91,7 +65,6 @@ export default function EnsureSession({ children }: { children: ReactNode }) {
       .then((res) => {
         if (cancelled) return;
         if (res.ok) {
-          markLocalSessionReady();
           setReady(true);
         } else {
           establishFirebaseSession();
