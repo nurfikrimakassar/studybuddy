@@ -37,15 +37,24 @@ function celebrate() {
   });
 }
 
-async function logSession(durationMinutes: number) {
+async function logSession(durationMinutes: number): Promise<boolean> {
   try {
-    await fetch("/api/pomodoro/session", {
+    const res = await fetch("/api/pomodoro/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ durationMinutes, completed: true }),
     });
-  } catch {
-    // Nggak fatal — statistik cuma nggak nambah, timer tetap jalan.
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      // eslint-disable-next-line no-console
+      console.error(`[pomodoro] Gagal simpan sesi (${res.status}): ${body}`);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("[pomodoro] Gagal simpan sesi:", err);
+    return false;
   }
 }
 
@@ -68,6 +77,7 @@ export default function PomodoroApp() {
   const [sessionsToday, setSessionsToday] = useState(0);
   const [minutesToday, setMinutesToday] = useState(0);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
+  const [toast, setToast] = useState("");
 
   const stateRef = useRef({ mode, round, focusMin, shortMin, longMin });
   stateRef.current = { mode, round, focusMin, shortMin, longMin };
@@ -77,6 +87,16 @@ export default function PomodoroApp() {
   // dari decrement per-tick — supaya tetap akurat walau tab di-background
   // dan browser nge-throttle/nge-pause setInterval-nya.
   const endAtRef = useRef<number | null>(null);
+
+  // Dipakai debugFastForward: begitu sesi debug ini kelar, timer berhenti
+  // (bukan lanjut ke istirahat otomatis) supaya jelas kelihatan "sesi ini
+  // udah selesai", bukan keliatan jalan terus tanpa henti.
+  const pauseAfterNextRef = useRef(false);
+
+  function showToast(message: string) {
+    setToast(message);
+    setTimeout(() => setToast(""), 4000);
+  }
 
   function refreshStats() {
     fetch("/api/stats/summary")
@@ -102,13 +122,23 @@ export default function PomodoroApp() {
     const s = stateRef.current;
     if (s.mode === "focus") {
       celebrate();
-      logSession(s.focusMin);
+      logSession(s.focusMin).then((ok) => {
+        showToast(ok ? `✅ Sesi tersimpan (${s.focusMin} menit fokus)` : "⚠️ Gagal simpan sesi — cek Console buat detailnya");
+        if (ok) refreshStats();
+      });
+
       const nextMode: Mode = s.round % 4 === 0 ? "long" : "short";
       const nextSeconds = durationFor(nextMode, s.focusMin, s.shortMin, s.longMin);
-      endAtRef.current = Date.now() + nextSeconds * 1000;
       setMode(nextMode);
       setSecondsLeft(nextSeconds);
-      setTimeout(refreshStats, 300);
+
+      if (pauseAfterNextRef.current) {
+        pauseAfterNextRef.current = false;
+        endAtRef.current = null;
+        setRunning(false);
+      } else {
+        endAtRef.current = Date.now() + nextSeconds * 1000;
+      }
     } else {
       const nextRound = s.mode === "long" ? 1 : s.round + 1;
       const nextSeconds = durationFor("focus", s.focusMin, s.shortMin, s.longMin);
@@ -156,6 +186,7 @@ export default function PomodoroApp() {
   }
 
   function reset() {
+    pauseAfterNextRef.current = false;
     setRunning(false);
     endAtRef.current = null;
     setMode("focus");
@@ -167,16 +198,19 @@ export default function PomodoroApp() {
     advance();
   }
 
-  // Debug only: percepat sesi saat ini jadi 5 detik lagi, lalu biarkan
-  // countdown normal jalan sampai habis — supaya bisa cepat lihat alur
-  // POST /api/pomodoro/session + refresh stats tanpa nunggu 25 menit asli.
+  // Debug only: percepat sesi saat ini jadi 5 detik lagi. Begitu sesi itu
+  // kelar, timer otomatis berhenti (bukan lanjut ke istirahat) supaya
+  // kelihatan jelas "sesi ini udah selesai & tersimpan" lewat toast,
+  // tanpa perlu nunggu 25 menit asli atau bingung dia masih jalan atau kagak.
   function debugFastForward() {
+    pauseAfterNextRef.current = true;
     endAtRef.current = Date.now() + 5000;
     setSecondsLeft(5);
     setRunning(true);
   }
 
   function applyDurations(label: string, focus: number, short: number, long: number) {
+    pauseAfterNextRef.current = false;
     setPreset(label);
     setFocusMin(focus);
     setShortMin(short);
@@ -433,6 +467,23 @@ export default function PomodoroApp() {
       >
         🐞 Debug: selesaikan sesi 5 detik lagi
       </button>
+
+      {toast && (
+        <div
+          style={{
+            background: toast.startsWith("✅") ? "#F1F6EF" : "#FBF2F0",
+            border: `1.5px solid ${toast.startsWith("✅") ? "#CFE0C9" : "#F3DCD6"}`,
+            borderRadius: 12,
+            padding: "12px 16px",
+            textAlign: "center",
+            fontSize: "0.85rem",
+            fontWeight: 700,
+            color: toast.startsWith("✅") ? "#4E6B4A" : "#9A5347",
+          }}
+        >
+          {toast}
+        </div>
+      )}
 
       {running && blockedDomains.length > 0 && (
         <div style={{ background: "#FBF2F0", border: "1px solid #F3DCD6", borderRadius: 16, padding: "18px 22px" }}>
