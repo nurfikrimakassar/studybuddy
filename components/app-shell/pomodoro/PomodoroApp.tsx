@@ -110,6 +110,14 @@ export default function PomodoroApp() {
     advance();
   }
 
+  // Debug only: percepat sesi saat ini jadi 5 detik lagi, lalu biarkan
+  // countdown normal jalan sampai habis — supaya bisa cepat lihat alur
+  // POST /api/pomodoro/session + refresh stats tanpa nunggu 25 menit asli.
+  function debugFastForward() {
+    setSecondsLeft(5);
+    setRunning(true);
+  }
+
   function applyPreset(p: (typeof PRESETS)[number]) {
     setPreset(p.label);
     setFocusMin(p.focus);
@@ -299,6 +307,23 @@ export default function PomodoroApp() {
           ))}
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={debugFastForward}
+        style={{
+          alignSelf: "center",
+          fontSize: "0.76rem",
+          fontWeight: 700,
+          color: "#9A5347",
+          background: "#FBF2F0",
+          padding: "8px 14px",
+          borderRadius: 100,
+          border: "1px dashed #F3DCD6",
+        }}
+      >
+        🐞 Debug: selesaikan sesi 5 detik lagi
+      </button>
 
       {running && blockedDomains.length > 0 && (
         <div style={{ background: "#FBF2F0", border: "1px solid #F3DCD6", borderRadius: 16, padding: "18px 22px" }}>
