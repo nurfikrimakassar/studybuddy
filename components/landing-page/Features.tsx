@@ -354,7 +354,7 @@ const features = [
 
 export default function Features() {
   return (
-    <section data-screen-label="Features" style={{ padding: "96px 20px" }}>
+    <section data-screen-label="Features" id="features" style={{ padding: "96px 20px" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto", width: "100%" }}>
         <div className="sec-head" style={{ maxWidth: 820, marginBottom: 48 }}>
           <div

@@ -26,7 +26,7 @@ const columns = [
     title: "Kontak",
     links: [
       { label: "hello@studybuddy.app", href: "mailto:hello@studybuddy.app" },
-      { label: "Join Waitlist", href: "#waitlist" },
+      { label: "Buka Aplikasi", href: "/api/auth/google" },
       { label: "Instagram", href: "#" },
       { label: "X (Twitter)", href: "#" },
     ],

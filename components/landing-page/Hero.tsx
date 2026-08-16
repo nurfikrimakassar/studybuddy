@@ -1,5 +1,3 @@
-import WaitlistFormHero from "./WaitlistFormHero";
-
 const blockedSites = ["Instagram", "TikTok", "YouTube"];
 
 function BlockedSitePill({ label }: { label: string }) {
@@ -75,8 +73,35 @@ export default function Hero() {
             </p>
           </div>
 
-          <div id="waitlist" style={{ maxWidth: 420 }}>
-            <WaitlistFormHero />
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <a
+              href="/api/auth/google"
+              style={{
+                background: "#3A3170",
+                color: "#fff",
+                padding: "15px 26px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Coba Aplikasi
+            </a>
+            <a
+              href="#features"
+              style={{
+                padding: "15px 22px",
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                color: "#3A3170",
+                border: "1.5px solid #DDD6F3",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Lihat Semua Fitur
+            </a>
           </div>
         </div>
 

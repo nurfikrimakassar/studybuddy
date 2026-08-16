@@ -96,6 +96,12 @@ br.brk {
   }
 }
 
+@media (max-width: 760px) {
+  .top-nav {
+    display: none !important;
+  }
+}
+
 @media (max-width: 640px) {
   br.brk {
     display: none;

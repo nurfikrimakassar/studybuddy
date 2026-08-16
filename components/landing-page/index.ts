@@ -7,6 +7,3 @@ export { default as SocialProof } from "./SocialProof";
 export { default as FinalCTA } from "./FinalCTA";
 export { default as Footer } from "./Footer";
 export { default as Logo } from "./Logo";
-export { WaitlistProvider, useWaitlist } from "./WaitlistContext";
-export { default as WaitlistFormHero } from "./WaitlistFormHero";
-export { default as WaitlistFormCompact } from "./WaitlistFormCompact";
