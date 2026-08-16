@@ -38,7 +38,10 @@ export default function GoogleSignInButton({
       });
       if (!res.ok) throw new Error("Gagal bikin sesi login.");
 
-      router.push("/dashboard");
+      // Re-render server components (mis. cek cookie sesi) di halaman yang
+      // sama tanpa full page reload, alih-alih redirect ke path tetap —
+      // komponen ini dipasang di halaman manapun yang butuh gate login.
+      router.refresh();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("[auth] Google sign-in failed:", err);

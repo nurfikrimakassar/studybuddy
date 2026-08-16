@@ -1,9 +1,8 @@
 import Logo from "./Logo";
-import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const navLinks = [
-  { label: "Pomodoro Timer", href: "#features" },
-  { label: "Jadwal & Kalender", href: "#features" },
+  { label: "Pomodoro Timer", href: "/timer" },
+  { label: "Jadwal & Kalender", href: "/jadwal" },
   { label: "Flashcard & Quiz", href: "#features" },
   { label: "PDF Summarizer", href: "#features" },
 ];
@@ -40,7 +39,8 @@ export default function TopBar() {
           </a>
         ))}
       </nav>
-      <GoogleSignInButton
+      <a
+        href="/timer"
         style={{
           fontSize: "0.9rem",
           fontWeight: 700,
@@ -51,7 +51,7 @@ export default function TopBar() {
         }}
       >
         Buka Aplikasi
-      </GoogleSignInButton>
+      </a>
     </div>
   );
 }

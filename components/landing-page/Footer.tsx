@@ -1,5 +1,4 @@
 import Logo from "./Logo";
-import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const linkStyle: React.CSSProperties = { fontSize: "0.88rem", color: "#B8AEDF" };
 
@@ -17,8 +16,8 @@ const columns = [
     title: "Produk",
     links: [
       { label: "Site Blocker", href: "#" },
-      { label: "Pomodoro Timer", href: "#" },
-      { label: "Jadwal & Kalender", href: "#" },
+      { label: "Pomodoro Timer", href: "/timer" },
+      { label: "Jadwal & Kalender", href: "/jadwal" },
       { label: "Flashcard & Quiz", href: "#" },
       { label: "PDF Summarizer", href: "#" },
     ],
@@ -27,7 +26,7 @@ const columns = [
     title: "Kontak",
     links: [
       { label: "hello@studybuddy.app", href: "mailto:hello@studybuddy.app" },
-      { label: "Buka Aplikasi", href: "/api/auth/google" },
+      { label: "Buka Aplikasi", href: "/timer" },
       { label: "Instagram", href: "#" },
       { label: "X (Twitter)", href: "#" },
     ],
@@ -72,17 +71,11 @@ export default function Footer() {
             <div key={col.title} style={{ minWidth: 140 }}>
               <div style={columnTitleStyle}>{col.title}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {col.links.map((link) =>
-                  link.href === "/api/auth/google" ? (
-                    <GoogleSignInButton key={link.label} style={linkStyle}>
-                      {link.label}
-                    </GoogleSignInButton>
-                  ) : (
-                    <a key={link.label} href={link.href} style={linkStyle}>
-                      {link.label}
-                    </a>
-                  )
-                )}
+                {col.links.map((link) => (
+                  <a key={link.label} href={link.href} style={linkStyle}>
+                    {link.label}
+                  </a>
+                ))}
               </div>
             </div>
           ))}

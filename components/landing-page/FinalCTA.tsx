@@ -1,5 +1,3 @@
-import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
-
 export default function FinalCTA() {
   return (
     <section data-screen-label="Final CTA" style={{ padding: "40px 20px 96px", textAlign: "center" }}>
@@ -42,7 +40,8 @@ export default function FinalCTA() {
             Tidak ada komitmen, cukup email kamu.
           </p>
           <div style={{ maxWidth: 440, margin: "0 auto" }}>
-            <GoogleSignInButton
+            <a
+              href="/timer"
               style={{
                 display: "inline-block",
                 background: "#3A3170",
@@ -54,7 +53,7 @@ export default function FinalCTA() {
               }}
             >
               Coba Aplikasi
-            </GoogleSignInButton>
+            </a>
           </div>
         </div>
       </div>
