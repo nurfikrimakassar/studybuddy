@@ -288,14 +288,6 @@ export default function PomodoroApp() {
       ? `Sesi ${Math.min(completedSessions + (mode === "focus" ? 1 : 0), totalSessions)}/${totalSessions}`
       : `Ronde ${round}/4`;
 
-  const dots: { width: number; active: boolean }[] = [];
-  for (let i = 1; i <= 4; i++) {
-    const isCurrent = i === round && mode === "focus";
-    const isPast = i < round || (i === round && mode !== "focus");
-    dots.push({ width: 16, active: isPast || isCurrent });
-    if (i < 4) dots.push({ width: 5, active: false });
-  }
-
   return (
     <>
       {showOverlay && (
@@ -409,13 +401,7 @@ export default function PomodoroApp() {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
-          {dots.map((dot, i) => (
-            <div key={i} style={{ width: dot.width, height: 6, borderRadius: 3, background: dot.active ? "#4B4090" : "#DCD5F0" }} />
-          ))}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 24 }}>
           <button
             type="button"
             onClick={reset}
