@@ -62,11 +62,15 @@ export default function EnsureSession({ children }: { children: ReactNode }) {
           }
 
           const idToken = await user.getIdToken();
-          await fetch("/api/auth/session", {
+          const res = await fetch("/api/auth/session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idToken }),
           });
+          if (!res.ok) {
+            const body = await res.text().catch(() => "");
+            throw new Error(`POST /api/auth/session gagal (${res.status}): ${body}`);
+          }
           markLocalSessionReady();
           unsubscribe();
           if (!cancelled) setReady(true);
