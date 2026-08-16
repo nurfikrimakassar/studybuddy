@@ -101,16 +101,16 @@ br.brk {
     display: none;
   }
   section[data-screen-label] {
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   div[data-screen-label="Top Bar"] {
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   footer[data-screen-label="Footer"] {
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   .footer-nav {
     margin-left: 0 !important;
@@ -120,27 +120,6 @@ br.brk {
   }
   .hero-left {
     gap: 32px !important;
-  }
-  .hero-headline {
-    font-size: calc(clamp(2.6rem, 5vw, 4.2rem) - 2px) !important;
-  }
-  section[data-screen-label="Hero"] p {
-    font-size: calc(1.1rem - 2px) !important;
-  }
-  section[data-screen-label="Problem"] p {
-    font-size: calc(1.02rem - 2px) !important;
-  }
-  section[data-screen-label="Features"] p {
-    font-size: calc(1.02rem - 2px) !important;
-  }
-  section[data-screen-label="How It Works"] p {
-    font-size: calc(0.9rem - 2px) !important;
-  }
-  section[data-screen-label="Social Proof"] p {
-    font-size: calc(1rem - 2px) !important;
-  }
-  section[data-screen-label="Final CTA"] p {
-    font-size: calc(1rem - 2px) !important;
   }
   .sec-head {
     margin-bottom: 32px !important;
@@ -153,7 +132,7 @@ br.brk {
     padding-bottom: 40px !important;
   }
   section[data-screen-label="Hero"] {
-    padding-top: 42px !important;
+    padding-top: 52px !important;
     padding-bottom: 60px !important;
   }
   section[data-screen-label="Problem"] {

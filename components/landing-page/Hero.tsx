@@ -47,7 +47,6 @@ export default function Hero() {
         >
           <div>
             <h1
-              className="hero-headline"
               style={{
                 fontSize: "clamp(2.6rem, 5vw, 4.2rem)",
                 lineHeight: 1.08,
