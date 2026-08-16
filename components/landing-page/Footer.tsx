@@ -1,4 +1,5 @@
 import Logo from "./Logo";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const linkStyle: React.CSSProperties = { fontSize: "0.88rem", color: "#B8AEDF" };
 
@@ -71,11 +72,17 @@ export default function Footer() {
             <div key={col.title} style={{ minWidth: 140 }}>
               <div style={columnTitleStyle}>{col.title}</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {col.links.map((link) => (
-                  <a key={link.label} href={link.href} style={linkStyle}>
-                    {link.label}
-                  </a>
-                ))}
+                {col.links.map((link) =>
+                  link.href === "/api/auth/google" ? (
+                    <GoogleSignInButton key={link.label} style={linkStyle}>
+                      {link.label}
+                    </GoogleSignInButton>
+                  ) : (
+                    <a key={link.label} href={link.href} style={linkStyle}>
+                      {link.label}
+                    </a>
+                  )
+                )}
               </div>
             </div>
           ))}

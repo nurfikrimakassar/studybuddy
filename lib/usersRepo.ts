@@ -8,31 +8,26 @@ export type User = {
 };
 
 /**
- * Insert a user on first login, or update their name/tokens on subsequent
- * logins. Google only sends a refresh_token on the very first consent (or
- * when prompt=consent is forced), so we keep the existing one on file if
- * the new login didn't return one.
+ * Insert a user on first login, or update their name on subsequent logins.
+ * Keyed on Firebase UID since that's the stable identity Firebase Auth gives us.
  */
-export async function upsertUserFromGoogle({
+export async function upsertUserFromFirebase({
+  firebaseUid,
   email,
   name,
-  accessToken,
-  refreshToken,
 }: {
+  firebaseUid: string;
   email: string;
   name: string;
-  accessToken?: string | null;
-  refreshToken?: string | null;
 }): Promise<User> {
   const { rows } = await pool.query(
-    `INSERT INTO users (email, name, google_access_token, google_refresh_token)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (email) DO UPDATE SET
-       name = EXCLUDED.name,
-       google_access_token = EXCLUDED.google_access_token,
-       google_refresh_token = COALESCE(EXCLUDED.google_refresh_token, users.google_refresh_token)
+    `INSERT INTO users (firebase_uid, email, name)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (firebase_uid) DO UPDATE SET
+       email = EXCLUDED.email,
+       name = EXCLUDED.name
      RETURNING id, email, name, created_at`,
-    [email, name, accessToken || null, refreshToken || null]
+    [firebaseUid, email, name]
   );
   return rows[0];
 }

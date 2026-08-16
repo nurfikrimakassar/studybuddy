@@ -1,3 +1,5 @@
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+
 const blockedSites = ["Instagram", "TikTok", "YouTube"];
 
 function BlockedSitePill({ label }: { label: string }) {
@@ -74,8 +76,7 @@ export default function Hero() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-            <a
-              href="/api/auth/google"
+            <GoogleSignInButton
               style={{
                 background: "#3A3170",
                 color: "#fff",
@@ -87,7 +88,7 @@ export default function Hero() {
               }}
             >
               Coba Aplikasi
-            </a>
+            </GoogleSignInButton>
             <a
               href="#features"
               style={{

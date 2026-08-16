@@ -10,7 +10,8 @@
     "migrate": "node scripts/migrate.js"
   },
   "dependencies": {
-    "googleapis": "^140.0.1",
+    "firebase": "^12.17.1",
+    "firebase-admin": "^14.2.0",
     "jsonwebtoken": "^9.0.2",
     "next": "^14.2.5",
     "pg": "^8.12.0",

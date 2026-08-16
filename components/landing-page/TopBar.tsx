@@ -1,4 +1,5 @@
 import Logo from "./Logo";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const navLinks = [
   { label: "Pomodoro Timer", href: "#features" },
@@ -39,8 +40,7 @@ export default function TopBar() {
           </a>
         ))}
       </nav>
-      <a
-        href="/api/auth/google"
+      <GoogleSignInButton
         style={{
           fontSize: "0.9rem",
           fontWeight: 700,
@@ -51,7 +51,7 @@ export default function TopBar() {
         }}
       >
         Buka Aplikasi
-      </a>
+      </GoogleSignInButton>
     </div>
   );
 }
