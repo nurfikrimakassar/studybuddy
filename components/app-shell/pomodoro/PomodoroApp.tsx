@@ -68,6 +68,12 @@ export default function PomodoroApp() {
   const [customFocus, setCustomFocus] = useState("25");
   const [customShort, setCustomShort] = useState("5");
   const [customLong, setCustomLong] = useState("15");
+  const [customSessions, setCustomSessions] = useState("4");
+
+  // Berapa sesi fokus ditarget sebelum timer berhenti sendiri, bukan muter
+  // terus tanpa akhir. 0 berarti nggak dibatasi (muter terus kayak sebelumnya).
+  const [totalSessions, setTotalSessions] = useState(4);
+  const [completedSessions, setCompletedSessions] = useState(0);
 
   const [running, setRunning] = useState(false);
   const [mode, setMode] = useState<Mode>("focus");
@@ -79,8 +85,8 @@ export default function PomodoroApp() {
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [toast, setToast] = useState("");
 
-  const stateRef = useRef({ mode, round, focusMin, shortMin, longMin });
-  stateRef.current = { mode, round, focusMin, shortMin, longMin };
+  const stateRef = useRef({ mode, round, focusMin, shortMin, longMin, totalSessions, completedSessions });
+  stateRef.current = { mode, round, focusMin, shortMin, longMin, totalSessions, completedSessions };
 
   // Waktu (timestamp asli, bukan hitungan detik) saat fase berjalan ini
   // seharusnya berakhir. Timer dihitung dari selisih ke waktu ini, bukan
@@ -122,22 +128,48 @@ export default function PomodoroApp() {
     const s = stateRef.current;
     if (s.mode === "focus") {
       celebrate();
+
+      const newCompleted = s.completedSessions + 1;
+      const debugPause = pauseAfterNextRef.current;
+      // 0 = nggak dibatasi, muter terus. Kalau ditarget, berhenti sendiri
+      // begitu jumlah sesi fokus tercapai — nggak nyambung ke istirahat lagi.
+      const targetReached = !debugPause && s.totalSessions > 0 && newCompleted >= s.totalSessions;
+
       logSession(s.focusMin).then((ok) => {
-        showToast(ok ? `✅ Sesi tersimpan (${s.focusMin} menit fokus)` : "⚠️ Gagal simpan sesi — cek Console buat detailnya");
+        if (targetReached) {
+          showToast(
+            ok
+              ? `🎉 ${s.totalSessions} sesi selesai semua! Sesi terakhir tersimpan.`
+              : "🎉 Semua sesi selesai, tapi sesi terakhir gagal tersimpan."
+          );
+        } else {
+          showToast(ok ? `✅ Sesi tersimpan (${s.focusMin} menit fokus)` : "⚠️ Gagal simpan sesi — cek Console buat detailnya");
+        }
         if (ok) refreshStats();
       });
 
       const nextMode: Mode = s.round % 4 === 0 ? "long" : "short";
       const nextSeconds = durationFor(nextMode, s.focusMin, s.shortMin, s.longMin);
-      setMode(nextMode);
-      setSecondsLeft(nextSeconds);
 
-      if (pauseAfterNextRef.current) {
+      if (debugPause) {
         pauseAfterNextRef.current = false;
         endAtRef.current = null;
+        setMode(nextMode);
+        setSecondsLeft(nextSeconds);
         setRunning(false);
+        setCompletedSessions(newCompleted);
+      } else if (targetReached) {
+        endAtRef.current = null;
+        setRunning(false);
+        setMode("focus");
+        setRound(1);
+        setSecondsLeft(s.focusMin * 60);
+        setCompletedSessions(0);
       } else {
         endAtRef.current = Date.now() + nextSeconds * 1000;
+        setMode(nextMode);
+        setSecondsLeft(nextSeconds);
+        setCompletedSessions(newCompleted);
       }
     } else {
       const nextRound = s.mode === "long" ? 1 : s.round + 1;
@@ -191,6 +223,7 @@ export default function PomodoroApp() {
     endAtRef.current = null;
     setMode("focus");
     setRound(1);
+    setCompletedSessions(0);
     setSecondsLeft(focusMin * 60);
   }
 
@@ -209,29 +242,34 @@ export default function PomodoroApp() {
     setRunning(true);
   }
 
-  function applyDurations(label: string, focus: number, short: number, long: number) {
+  function applyDurations(label: string, focus: number, short: number, long: number, sessions: number) {
     pauseAfterNextRef.current = false;
     setPreset(label);
     setFocusMin(focus);
     setShortMin(short);
     setLongMin(long);
+    setTotalSessions(sessions);
     setRunning(false);
     endAtRef.current = null;
     setMode("focus");
     setRound(1);
+    setCompletedSessions(0);
     setSecondsLeft(focus * 60);
   }
 
   function applyPreset(p: (typeof PRESETS)[number]) {
     setCustomOpen(false);
-    applyDurations(p.label, p.focus, p.short, p.long);
+    applyDurations(p.label, p.focus, p.short, p.long, 4);
   }
 
   function applyCustom() {
     const focus = Math.max(1, Math.round(Number(customFocus)) || 25);
     const short = Math.max(1, Math.round(Number(customShort)) || 5);
     const long = Math.max(1, Math.round(Number(customLong)) || 15);
-    applyDurations("Custom", focus, short, long);
+    const parsedSessions = Math.round(Number(customSessions));
+    // 0 = sengaja nggak dibatasi (muter terus), bukan nilai kosong yang gagal parse.
+    const sessions = Number.isFinite(parsedSessions) ? Math.max(0, parsedSessions) : 4;
+    applyDurations("Custom", focus, short, long, sessions);
   }
 
   const total = durationFor(mode, focusMin, shortMin, longMin);
@@ -240,6 +278,10 @@ export default function PomodoroApp() {
   const ss = String(secondsLeft % 60).padStart(2, "0");
   const ringColor = mode === "focus" ? "#4B4090" : "#6F8F6B";
   const modeLabel = mode === "focus" ? "Fokus" : mode === "short" ? "Istirahat" : "Istirahat Panjang";
+  const sessionLabel =
+    totalSessions > 0
+      ? `Sesi ${Math.min(completedSessions + (mode === "focus" ? 1 : 0), totalSessions)}/${totalSessions}`
+      : `Ronde ${round}/4`;
 
   const dots: { width: number; active: boolean }[] = [];
   for (let i = 1; i <= 4; i++) {
@@ -315,7 +357,7 @@ export default function PomodoroApp() {
               {mm}:{ss}
             </div>
             <div style={{ fontSize: "0.82rem", color: "#9C97B5", fontWeight: 600, marginTop: 4 }}>
-              {modeLabel} · Ronde {round}/4
+              {modeLabel} · {sessionLabel}
             </div>
           </div>
         </div>
@@ -439,6 +481,10 @@ export default function PomodoroApp() {
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 600 }}>Istirahat panjang</span>
               <input type="number" min={1} value={customLong} onChange={(e) => setCustomLong(e.target.value)} style={inputStyle} />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <span style={{ fontSize: "0.72rem", color: "#9C97B5", fontWeight: 600 }}>Jumlah sesi (0 = terus)</span>
+              <input type="number" min={0} value={customSessions} onChange={(e) => setCustomSessions(e.target.value)} style={inputStyle} />
             </label>
             <button
               type="button"
