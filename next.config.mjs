@@ -7,7 +7,19 @@ const nextConfig = {
   // via Node's native require at runtime instead, which resolves ESM/CJS
   // correctly.
   experimental: {
-    serverComponentsExternalPackages: ["firebase-admin"],
+    // firebase-admin pulls in jwks-rsa, which requires jose@^6 (ESM-only).
+    // Externalizing just "firebase-admin" wasn't enough — webpack still
+    // bundled jose via that transitive chain. List the whole chain
+    // explicitly so none of it gets pulled into the webpack bundle.
+    serverComponentsExternalPackages: [
+      "firebase-admin",
+      "jose",
+      "jwks-rsa",
+      "google-auth-library",
+      "gaxios",
+      "gcp-metadata",
+      "gtoken",
+    ],
   },
 };
 
