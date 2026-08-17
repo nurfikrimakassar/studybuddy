@@ -11,6 +11,9 @@ export type CardTemplate = {
   border?: string;
   logoBg: string;
   logoGlyph: string;
+  decoration: "watermark" | "dots" | "none";
+  heroStat: "focus" | "streak";
+  layout: "hero" | "grid"; // "hero" = 1 angka besar + 2 substat, "grid" = 3 kolom setara
 };
 
 export const CARD_TEMPLATES: CardTemplate[] = [
@@ -26,6 +29,9 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     dividerColor: "rgba(255,255,255,0.15)",
     logoBg: "rgba(255,255,255,0.15)",
     logoGlyph: "#fff",
+    decoration: "watermark",
+    heroStat: "focus",
+    layout: "hero",
   },
   {
     id: "streak",
@@ -39,6 +45,9 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     dividerColor: "rgba(255,255,255,0.2)",
     logoBg: "rgba(255,255,255,0.18)",
     logoGlyph: "#fff",
+    decoration: "dots",
+    heroStat: "streak",
+    layout: "hero",
   },
   {
     id: "minimal",
@@ -53,5 +62,8 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     border: "1px solid #EAE6F6",
     logoBg: "#3A3170",
     logoGlyph: "#fff",
+    decoration: "none",
+    heroStat: "focus",
+    layout: "grid",
   },
 ];
