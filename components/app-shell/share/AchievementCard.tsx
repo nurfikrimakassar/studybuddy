@@ -59,7 +59,7 @@ function Decoration({ template }: { template: CardTemplate }) {
         style={{
           position: "absolute",
           right: -30,
-          bottom: -30,
+          bottom: -55,
           width: 200,
           height: 200,
           opacity: 0.07,
