@@ -15,8 +15,10 @@ function formatHoursMinutes(totalMinutes: number) {
   return `${h} jam ${m} menit`;
 }
 
-async function captureCardBlob(node: HTMLElement, backgroundColor: string): Promise<Blob> {
-  const blob = await toBlob(node, { pixelRatio: 2, backgroundColor });
+async function captureCardBlob(node: HTMLElement): Promise<Blob> {
+  // Nggak dikasih backgroundColor — biar area transparan (ruang aman buat
+  // shadow) tetap transparan di gambar hasilnya, bukan keisi warna kartu.
+  const blob = await toBlob(node, { pixelRatio: 2 });
   if (!blob) throw new Error("Gagal render kartu jadi gambar.");
   return blob;
 }
@@ -53,7 +55,7 @@ export default function ShareApp() {
     if (!storyExportRef.current) return;
     setBusy(true);
     try {
-      const blob = await captureCardBlob(storyExportRef.current, "#1E1B33");
+      const blob = await captureCardBlob(storyExportRef.current);
       const file = new File([blob], "studybuddy-progress.png", { type: "image/png" });
       const text = summary
         ? `${formatHoursMinutes(summary.minutesToday)} fokus hari ini, ${summary.streakDays} hari beruntun di StudyBuddy!`
@@ -86,7 +88,7 @@ export default function ShareApp() {
     if (!compactExportRef.current) return;
     setBusy(true);
     try {
-      const blob = await captureCardBlob(compactExportRef.current, template.cardBackground === "#fff" ? "#fff" : template.cardBackground);
+      const blob = await captureCardBlob(compactExportRef.current);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
