@@ -58,7 +58,7 @@ export default function ShareApp() {
       const blob = await captureCardBlob(storyExportRef.current);
       const file = new File([blob], "studybuddy-progress.png", { type: "image/png" });
       const text = summary
-        ? `${summary.streakDays} hari beruntun, ${formatHoursMinutes(summary.minutesToday)} fokus hari ini di StudyBuddy!`
+        ? `${formatHoursMinutes(summary.minutesToday)} fokus hari ini, ${summary.streakDays} hari beruntun di StudyBuddy!`
         : "Progres belajar StudyBuddy!";
 
       if (navigator.canShare?.({ files: [file] })) {
@@ -201,15 +201,15 @@ export default function ShareApp() {
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#B8AEDF", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Streak belajar
+              Fokus hari ini
             </div>
             <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#fff" }}>StudyBuddy</span>
           </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "#fff", lineHeight: 1 }}>{streakText}</div>
+          <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "#fff", lineHeight: 1 }}>{focusText}</div>
           <div style={{ display: "flex", gap: 8, borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 14 }}>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "0.62rem", color: "#CFC6EA", fontWeight: 600, marginBottom: 3 }}>Jam fokus</div>
-              <div style={{ fontSize: "0.98rem", fontWeight: 800, color: "#fff" }}>{focusText}</div>
+              <div style={{ fontSize: "0.62rem", color: "#CFC6EA", fontWeight: 600, marginBottom: 3 }}>Streak</div>
+              <div style={{ fontSize: "0.98rem", fontWeight: 800, color: "#fff" }}>{streakText}</div>
             </div>
             <div style={{ flex: 1, textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
               <div style={{ fontSize: "0.62rem", color: "#CFC6EA", fontWeight: 600, marginBottom: 3 }}>Sesi Pomodoro</div>
@@ -258,15 +258,15 @@ export default function ShareApp() {
 
           <div>
             <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#B8AEDF", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-              Streak belajar
+              Fokus hari ini
             </div>
-            <div style={{ fontSize: "4.2rem", fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.02em" }}>{streakText}</div>
+            <div style={{ fontSize: "4.2rem", fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.02em" }}>{focusText}</div>
           </div>
 
           <div style={{ display: "flex", gap: 16, borderTop: "1px solid rgba(255,255,255,0.18)", paddingTop: 24 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "0.72rem", color: "#CFC6EA", fontWeight: 600, marginBottom: 6 }}>Jam fokus</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>{focusText}</div>
+              <div style={{ fontSize: "0.72rem", color: "#CFC6EA", fontWeight: 600, marginBottom: 6 }}>Streak</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>{streakText}</div>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: "0.72rem", color: "#CFC6EA", fontWeight: 600, marginBottom: 6 }}>Sesi Pomodoro</div>
