@@ -136,7 +136,7 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
     >
       <Decoration template={template} />
 
-      <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
         <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} />
         <span style={{ fontWeight: 800, fontSize: cfg.nameFont, color: template.textColor, letterSpacing: "-0.01em" }}>
           StudyBuddy
