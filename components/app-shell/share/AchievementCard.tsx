@@ -28,13 +28,25 @@ function FlameIcon({ size }: { size: number }) {
   return <span style={{ fontSize: size, lineHeight: 1 }}>🔥</span>;
 }
 
-function Logo({ size, bg, glyph }: { size: number; bg: string; glyph: string }) {
+function Logo({ size, bg, glyph, square }: { size: number; bg: string; glyph: string; square?: boolean }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: size * 0.28, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: square ? 4 : size * 0.28,
+        border: square ? `2px solid ${glyph}` : undefined,
+        background: bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}
+    >
       <svg width={size * 0.53} height={size * 0.53} viewBox="0 0 24 24" fill="none">
-        <rect x="3.8" y="4.6" width="6" height="14.8" rx="3" fill={glyph} />
-        <rect x="14.2" y="4.6" width="6" height="14.8" rx="3" fill={glyph} />
-        <rect x="8.6" y="7" width="6.8" height="2.8" rx="1.4" fill={glyph} />
+        <rect x="3.8" y="4.6" width="6" height="14.8" rx={square ? 0 : 3} fill={glyph} />
+        <rect x="14.2" y="4.6" width="6" height="14.8" rx={square ? 0 : 3} fill={glyph} />
+        <rect x="8.6" y="7" width="6.8" height="2.8" rx={square ? 0 : 1.4} fill={glyph} />
       </svg>
     </div>
   );
@@ -93,6 +105,12 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
 ) {
   const cfg = VARIANT_CONFIG[variant];
   const isStory = variant === "story";
+  const isPreview = variant === "preview";
+  // box-shadow yang nongol di luar batas kotak card bisa kepotong pas
+  // di-capture jadi gambar (html-to-image motong persis di batas node-nya) —
+  // kasih bungkus tipis transparan di sekelilingnya buat ruang aman.
+  const hasHardShadow = template.cardStyle === "brutal" && !isStory;
+  const safePad = hasHardShadow ? 10 : 0;
   const heroText = template.heroStat === "streak" ? streakText : focusText;
   const heroLabel = template.heroStat === "streak" ? "Streak belajar" : "Fokus hari ini";
   const subStats =
@@ -106,9 +124,9 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
           { label: "Sesi Pomodoro", value: sessionsText },
         ];
 
-  return (
+  const cardNode = (
     <div
-      ref={ref}
+      ref={isPreview ? ref : undefined}
       style={{
         position: "relative",
         overflow: "hidden",
@@ -118,7 +136,8 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
         margin: variant === "preview" ? "0 auto" : undefined,
         background: isStory ? template.storyBackground : template.cardBackground,
         border: template.border,
-        borderRadius: isStory ? 0 : 18,
+        borderRadius: isStory || template.cardStyle === "brutal" ? 0 : 18,
+        boxShadow: template.cardStyle === "brutal" && !isStory ? "8px 8px 0 #1E1B33" : undefined,
         padding: cfg.padding,
         display: "flex",
         flexDirection: "column",
@@ -131,7 +150,7 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
 
       {template.layout === "grid" && (
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: template.logoAlign === "right" ? "flex-end" : "flex-start", gap: 10 }}>
-          <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} />
+          <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} square={template.cardStyle === "brutal"} />
           <span style={{ fontWeight: 800, fontSize: cfg.nameFont, color: template.textColor, letterSpacing: "-0.01em" }}>
             StudyBuddy
           </span>
@@ -166,7 +185,7 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
                 {heroLabel}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} />
+                <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} square={template.cardStyle === "brutal"} />
                 <span style={{ fontWeight: 800, fontSize: cfg.nameFont, color: template.textColor, letterSpacing: "-0.01em" }}>
                   StudyBuddy
                 </span>
@@ -180,19 +199,45 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
             </div>
           </div>
 
-          <div style={{ position: "relative", display: "flex", gap: isStory ? 16 : 8, borderTop: `1px solid ${template.dividerColor}`, paddingTop: isStory ? 24 : 14 }}>
-            {subStats.map((stat, i) => (
-              <div
-                key={stat.label}
-                style={{ flex: 1, textAlign: isStory ? "left" : "center", borderLeft: !isStory && i > 0 ? `1px solid ${template.dividerColor}` : undefined }}
-              >
-                <div style={{ fontSize: cfg.statLabelFont, color: template.subTextColor, fontWeight: 600, marginBottom: isStory ? 6 : 3 }}>{stat.label}</div>
-                <div style={{ fontSize: cfg.statValueFont, fontWeight: 800, color: template.textColor }}>{stat.value}</div>
-              </div>
-            ))}
-          </div>
+          {template.cardStyle === "brutal" ? (
+            // Brutal: tiap stat jadi kotak sendiri dengan border, bukan
+            // dipisah garis tipis — chunky, sesuai gaya neobrutalism.
+            <div style={{ position: "relative", display: "flex", gap: isStory ? 14 : 8 }}>
+              {subStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{ flex: 1, textAlign: "center", border: `2px solid ${template.dividerColor}`, borderRadius: 0, padding: isStory ? "14px 8px" : "8px 6px" }}
+                >
+                  <div style={{ fontSize: cfg.statLabelFont, color: template.subTextColor, fontWeight: 700, marginBottom: isStory ? 6 : 3, textTransform: "uppercase" }}>
+                    {stat.label}
+                  </div>
+                  <div style={{ fontSize: cfg.statValueFont, fontWeight: 800, color: template.textColor }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ position: "relative", display: "flex", gap: isStory ? 16 : 8, borderTop: `1px solid ${template.dividerColor}`, paddingTop: isStory ? 24 : 14 }}>
+              {subStats.map((stat, i) => (
+                <div
+                  key={stat.label}
+                  style={{ flex: 1, textAlign: isStory ? "left" : "center", borderLeft: !isStory && i > 0 ? `1px solid ${template.dividerColor}` : undefined }}
+                >
+                  <div style={{ fontSize: cfg.statLabelFont, color: template.subTextColor, fontWeight: 600, marginBottom: isStory ? 6 : 3 }}>{stat.label}</div>
+                  <div style={{ fontSize: cfg.statValueFont, fontWeight: 800, color: template.textColor }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
+    </div>
+  );
+
+  if (isPreview) return cardNode;
+
+  return (
+    <div ref={ref} style={{ display: "inline-block", padding: safePad }}>
+      {cardNode}
     </div>
   );
 });

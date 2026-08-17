@@ -15,6 +15,7 @@ export type CardTemplate = {
   heroStat: "focus" | "streak";
   layout: "hero" | "grid"; // "hero" = 1 angka besar + 2 substat, "grid" = 3 kolom setara
   logoAlign: "left" | "right";
+  cardStyle: "soft" | "brutal"; // "brutal" = border tebal, shadow keras, sudut tajam
 };
 
 export const CARD_TEMPLATES: CardTemplate[] = [
@@ -34,6 +35,7 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     heroStat: "focus",
     layout: "hero",
     logoAlign: "right",
+    cardStyle: "soft",
   },
   {
     id: "streak",
@@ -51,6 +53,7 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     heroStat: "streak",
     layout: "hero",
     logoAlign: "right",
+    cardStyle: "soft",
   },
   {
     id: "minimal",
@@ -69,5 +72,25 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     heroStat: "focus",
     layout: "grid",
     logoAlign: "left",
+    cardStyle: "soft",
+  },
+  {
+    id: "brutal",
+    name: "Neobrutal",
+    swatch: "#FFD23F",
+    cardBackground: "#FFD23F",
+    storyBackground: "#FFD23F",
+    labelColor: "#1E1B33",
+    textColor: "#1E1B33",
+    subTextColor: "#1E1B33",
+    dividerColor: "#1E1B33",
+    border: "3px solid #1E1B33",
+    logoBg: "#1E1B33",
+    logoGlyph: "#FFD23F",
+    decoration: "none",
+    heroStat: "focus",
+    layout: "hero",
+    logoAlign: "right",
+    cardStyle: "brutal",
   },
 ];
