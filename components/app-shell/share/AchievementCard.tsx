@@ -136,12 +136,14 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
     >
       <Decoration template={template} />
 
-      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: template.logoAlign === "right" ? "flex-end" : "flex-start", gap: 10 }}>
-        <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} />
-        <span style={{ fontWeight: 800, fontSize: cfg.nameFont, color: template.textColor, letterSpacing: "-0.01em" }}>
-          StudyBuddy
-        </span>
-      </div>
+      {template.layout === "grid" && (
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: template.logoAlign === "right" ? "flex-end" : "flex-start", gap: 10 }}>
+          <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} />
+          <span style={{ fontWeight: 800, fontSize: cfg.nameFont, color: template.textColor, letterSpacing: "-0.01em" }}>
+            StudyBuddy
+          </span>
+        </div>
+      )}
 
       {template.layout === "grid" ? (
         // Minimal: 3 kolom setara, nggak ada 1 angka besar yang "dipentingin" —
@@ -166,8 +168,16 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
       ) : (
         <>
           <div style={{ position: "relative" }}>
-            <div style={{ fontSize: cfg.labelFont, fontWeight: 700, color: template.labelColor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: isStory ? 10 : 4 }}>
-              {heroLabel}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: isStory ? 10 : 4 }}>
+              <div style={{ fontSize: cfg.labelFont, fontWeight: 700, color: template.labelColor, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                {heroLabel}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Logo size={cfg.logoSize} bg={template.logoBg} glyph={template.logoGlyph} />
+                <span style={{ fontWeight: 800, fontSize: cfg.nameFont, color: template.textColor, letterSpacing: "-0.01em" }}>
+                  StudyBuddy
+                </span>
+              </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: isStory ? 12 : 6 }}>
               {template.heroStat === "streak" && <FlameIcon color={template.textColor} size={isStory ? 44 : 24} />}
