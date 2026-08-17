@@ -69,8 +69,8 @@ function Decoration({ template }: { template: CardTemplate }) {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.18) 1.5px, transparent 1.5px)",
-          backgroundSize: "18px 18px",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px)",
+          backgroundSize: "12px 12px",
           pointerEvents: "none",
         }}
       />
