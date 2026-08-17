@@ -10,8 +10,9 @@ type Summary = { streakDays: number; minutesToday: number; sessionsToday: number
 function formatHoursMinutes(totalMinutes: number) {
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  if (h === 0) return `${m}m`;
-  return `${h}j ${m}m`;
+  if (h === 0) return `${m} menit`;
+  if (m === 0) return `${h} jam`;
+  return `${h} jam ${m} menit`;
 }
 
 async function captureCardBlob(node: HTMLElement, backgroundColor: string): Promise<Blob> {

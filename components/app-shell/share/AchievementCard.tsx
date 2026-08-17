@@ -24,15 +24,8 @@ const VARIANT_CONFIG: Record<
   story: { width: 360, height: 640, padding: "36px 32px", heroFont: "4.2rem", gridFont: "2.2rem", labelFont: "0.8rem", logoSize: 30, nameFont: "1.05rem", statLabelFont: "0.72rem", statValueFont: "1.5rem", gap: 0 },
 };
 
-function FlameIcon({ color, size }: { color: string; size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 2c1 3-3 4-3 8a3 3 0 006 0c1.5 1 2 2.8 2 4.5A5 5 0 0112 20a5 5 0 01-5-5c0-2.5 1.2-4 2-5.5C10 7.5 11 5 12 2z"
-        fill={color}
-      />
-    </svg>
-  );
+function FlameIcon({ size }: { size: number }) {
+  return <span style={{ fontSize: size, lineHeight: 1 }}>🔥</span>;
 }
 
 function Logo({ size, bg, glyph }: { size: number; bg: string; glyph: string }) {
@@ -180,7 +173,7 @@ const AchievementCard = forwardRef<HTMLDivElement, Props>(function AchievementCa
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: isStory ? 12 : 6 }}>
-              {template.heroStat === "streak" && <FlameIcon color={template.textColor} size={isStory ? 44 : 24} />}
+              {template.heroStat === "streak" && <FlameIcon size={isStory ? 44 : 24} />}
               <div style={{ fontSize: cfg.heroFont, fontWeight: 800, color: template.textColor, lineHeight: 1, letterSpacing: "-0.02em" }}>
                 {heroText}
               </div>
