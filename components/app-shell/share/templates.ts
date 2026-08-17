@@ -14,6 +14,7 @@ export type CardTemplate = {
   decoration: "watermark" | "dots" | "none";
   heroStat: "focus" | "streak";
   layout: "hero" | "grid"; // "hero" = 1 angka besar + 2 substat, "grid" = 3 kolom setara
+  logoAlign: "left" | "right";
 };
 
 export const CARD_TEMPLATES: CardTemplate[] = [
@@ -32,6 +33,7 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     decoration: "watermark",
     heroStat: "focus",
     layout: "hero",
+    logoAlign: "right",
   },
   {
     id: "streak",
@@ -48,6 +50,7 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     decoration: "dots",
     heroStat: "streak",
     layout: "hero",
+    logoAlign: "right",
   },
   {
     id: "minimal",
@@ -65,5 +68,6 @@ export const CARD_TEMPLATES: CardTemplate[] = [
     decoration: "none",
     heroStat: "focus",
     layout: "grid",
+    logoAlign: "left",
   },
 ];
