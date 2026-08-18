@@ -1,15 +1,20 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/currentUser";
+import { NextRequest } from "next/server";
+import { getCurrentUserFromRequest } from "@/lib/auth/currentUser";
+import { corsJson, handleOptions } from "@/lib/cors";
 
 export const runtime = "nodejs";
 
-// GET /api/me — dipakai frontend untuk cek status login
-export async function GET() {
-  const user = await getCurrentUser();
+export async function OPTIONS() {
+  return handleOptions();
+}
+
+// GET /api/me — dipakai frontend (web & extension) untuk cek status login
+export async function GET(req: NextRequest) {
+  const user = await getCurrentUserFromRequest(req);
   if (!user) {
-    return NextResponse.json({ error: "Belum login." }, { status: 401 });
+    return corsJson({ error: "Belum login." }, { status: 401 });
   }
-  return NextResponse.json({
+  return corsJson({
     id: user.id,
     email: user.email,
     name: user.name,

@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { pool } from "@/lib/db";
 
 export type User = {
@@ -43,4 +44,29 @@ export async function findUserById(id: string): Promise<User | null> {
     [id]
   );
   return rows[0] || null;
+}
+
+export async function findUserByApiToken(token: string): Promise<User | null> {
+  const { rows } = await pool.query(
+    `SELECT id, email, name, created_at FROM users WHERE api_token = $1`,
+    [token]
+  );
+  return rows[0] || null;
+}
+
+/** Buat token kalau user belum punya, atau balikin yang udah ada — dipakai buat konek Chrome extension. */
+export async function ensureApiToken(userId: string): Promise<string> {
+  const { rows } = await pool.query(`SELECT api_token FROM users WHERE id = $1`, [userId]);
+  if (rows[0]?.api_token) return rows[0].api_token;
+
+  const token = randomBytes(24).toString("base64url");
+  await pool.query(`UPDATE users SET api_token = $1 WHERE id = $2`, [token, userId]);
+  return token;
+}
+
+/** Ganti ke token baru (misal kalau extension lama dicurigai bocor). */
+export async function regenerateApiToken(userId: string): Promise<string> {
+  const token = randomBytes(24).toString("base64url");
+  await pool.query(`UPDATE users SET api_token = $1 WHERE id = $2`, [token, userId]);
+  return token;
 }

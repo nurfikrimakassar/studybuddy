@@ -6,6 +6,7 @@ import Logo from "@/components/landing-page/Logo";
 import {
   BlockerIcon,
   CalendarIcon,
+  ExtensionIcon,
   FlashcardIcon,
   PomodoroIcon,
   ShareIcon,
@@ -20,6 +21,10 @@ const navItems = [
   { href: "/app/blocker", label: "Site Blocker", shortLabel: "Blokir", Icon: BlockerIcon },
   { href: "/app/share", label: "Bagikan Progres", shortLabel: "Bagikan", Icon: ShareIcon },
 ];
+
+// Nggak dimasukin ke bottom nav mobile (biar nggak sesak) — cukup diakses
+// lewat sidebar desktop atau link dari halaman Site Blocker.
+const secondaryNavItem = { href: "/app/extension", label: "Extension", Icon: ExtensionIcon };
 
 export default function AppNav() {
   const pathname = usePathname();
@@ -69,6 +74,30 @@ export default function AppNav() {
               </Link>
             );
           })}
+        </div>
+
+        <div style={{ marginTop: "auto", borderTop: "1px solid #EAE6F6", paddingTop: 12 }}>
+          {(() => {
+            const { href, label, Icon } = secondaryNavItem;
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                href={href}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "11px 12px",
+                  borderRadius: 10,
+                  background: active ? "#F3F1FA" : "transparent",
+                  color: active ? "#3A3170" : "#7A7593",
+                }}
+              >
+                <Icon color={active ? "#3A3170" : "#7A7593"} />
+                <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>{label}</span>
+              </Link>
+            );
+          })()}
         </div>
       </div>
 

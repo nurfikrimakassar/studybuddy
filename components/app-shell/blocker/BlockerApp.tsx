@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 type Category = { id: string; label: string; enabled: boolean; sites: string[] };
@@ -214,7 +215,7 @@ export default function BlockerApp() {
 
       <p style={{ fontSize: "0.8rem", color: "#9C97B5", margin: 0, lineHeight: 1.6 }}>
         Daftar ini otomatis dipakai oleh ekstensi StudyBuddy di browser saat sesi fokus berjalan. Pastikan ekstensi
-        sudah terpasang agar pemblokiran aktif.
+        sudah terpasang dan <Link href="/app/extension" style={{ color: "#4B4090", fontWeight: 700 }}>terhubung ke akun ini</Link> agar pemblokiran aktif.
       </p>
     </>
   );

@@ -1,17 +1,22 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/currentUser";
+import { NextRequest } from "next/server";
+import { getCurrentUserFromRequest } from "@/lib/auth/currentUser";
 import { getStreakDays, getTodayFocusStats } from "@/lib/repos/pomodoroRepo";
+import { corsJson, handleOptions } from "@/lib/cors";
 
 export const runtime = "nodejs";
 
-export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Belum ada sesi." }, { status: 401 });
+export async function OPTIONS() {
+  return handleOptions();
+}
+
+export async function GET(req: NextRequest) {
+  const user = await getCurrentUserFromRequest(req);
+  if (!user) return corsJson({ error: "Belum ada sesi." }, { status: 401 });
 
   const [{ sessionsToday, minutesToday }, streakDays] = await Promise.all([
     getTodayFocusStats(user.id),
     getStreakDays(user.id),
   ]);
 
-  return NextResponse.json({ streakDays, minutesToday, sessionsToday });
+  return corsJson({ streakDays, minutesToday, sessionsToday });
 }

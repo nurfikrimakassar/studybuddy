@@ -58,3 +58,11 @@ export function BlockerIcon({ color = "currentColor" }: { color?: string }) {
     </svg>
   );
 }
+
+export function ExtensionIcon({ color = "currentColor" }: { color?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 3h-4v3.5a1.5 1.5 0 0 1-3 0V3H4v4h3.5a1.5 1.5 0 0 1 0 3H4v4h3.5a1.5 1.5 0 0 1 0 3H4v4h4v-3.5a1.5 1.5 0 0 1 3 0V21h4v-4h-3.5a1.5 1.5 0 0 1 0-3H21v-4h-3.5a1.5 1.5 0 0 1 0-3H21V3h-4v3.5a1.5 1.5 0 0 1-3 0V3z" />
+    </svg>
+  );
+}

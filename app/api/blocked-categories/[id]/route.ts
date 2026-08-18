@@ -1,23 +1,28 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/currentUser";
+import { NextRequest } from "next/server";
+import { getCurrentUserFromRequest } from "@/lib/auth/currentUser";
 import { deleteCategory, toggleCategory } from "@/lib/repos/blockerRepo";
+import { corsJson, handleOptions } from "@/lib/cors";
 
 export const runtime = "nodejs";
 
+export async function OPTIONS() {
+  return handleOptions();
+}
+
 // PATCH /api/blocked-categories/:id — toggle enabled/disabled
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Belum ada sesi." }, { status: 401 });
+  const user = await getCurrentUserFromRequest(req);
+  if (!user) return corsJson({ error: "Belum ada sesi." }, { status: 401 });
 
   const category = await toggleCategory(user.id, params.id);
-  if (!category) return NextResponse.json({ error: "Kategori tidak ditemukan." }, { status: 404 });
-  return NextResponse.json(category);
+  if (!category) return corsJson({ error: "Kategori tidak ditemukan." }, { status: 404 });
+  return corsJson(category);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Belum ada sesi." }, { status: 401 });
+  const user = await getCurrentUserFromRequest(req);
+  if (!user) return corsJson({ error: "Belum ada sesi." }, { status: 401 });
 
   await deleteCategory(user.id, params.id);
-  return NextResponse.json({ ok: true });
+  return corsJson({ ok: true });
 }

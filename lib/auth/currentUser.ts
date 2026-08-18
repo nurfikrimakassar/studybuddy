@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 import { COOKIE_NAME, verifySession } from "@/lib/auth/session";
-import { findUserById, type User } from "@/lib/usersRepo";
+import { findUserByApiToken, findUserById, type User } from "@/lib/usersRepo";
 
 /**
  * Reads the session cookie (works in Server Components and Route Handlers),
@@ -18,4 +19,19 @@ export async function getCurrentUser(): Promise<User | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Same as getCurrentUser, but also accepts an `Authorization: Bearer <token>`
+ * header — the Chrome extension can't rely on the session cookie (SameSite
+ * blocks it on cross-site fetches), so it authenticates with a long-lived
+ * api_token instead. Web app requests keep working via the cookie fallback.
+ */
+export async function getCurrentUserFromRequest(req: NextRequest): Promise<User | null> {
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice("Bearer ".length).trim();
+    if (token) return findUserByApiToken(token);
+  }
+  return getCurrentUser();
 }
