@@ -90,6 +90,34 @@ function flashBadgeDone() {
   }, 400);
 }
 
+// Service worker MV3 nggak punya akses DOM, jadi nggak bisa mainin <audio>
+// langsung — perlu "offscreen document" (satu-satunya konteks extension
+// yang punya DOM) buat itu.
+async function ensureOffscreenDocument() {
+  const existing = await chrome.runtime
+    .getContexts?.({ contextTypes: ["OFFSCREEN_DOCUMENT"] })
+    .catch(() => null);
+  if (existing && existing.length > 0) return;
+  try {
+    await chrome.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["AUDIO_PLAYBACK"],
+      justification: "Mainin suara notifikasi pas sesi Pomodoro selesai.",
+    });
+  } catch {
+    // kemungkinan udah ada offscreen document (race condition) — aman diabaikan
+  }
+}
+
+async function playSound() {
+  try {
+    await ensureOffscreenDocument();
+    await chrome.runtime.sendMessage({ type: "PLAY_SOUND" });
+  } catch {
+    // gagal mainin suara — nggak fatal, badge & notifikasi tetap jalan
+  }
+}
+
 async function updateBadge() {
   const timer = await getTimer();
   if (!timer.running) {
@@ -196,6 +224,7 @@ async function advance() {
       await setTimer({ running: false, mode: nextMode, secondsLeft: nextSeconds, endAt: null, completedSessions: newCompleted, debugPending: false });
       await disableBlocking();
       flashBadgeDone();
+      playSound();
       notify(debugPause ? "🐞 Sesi tes selesai & tersimpan." : "🎉 Semua sesi selesai, kerja bagus!");
     } else {
       const endAt = Date.now() + nextSeconds * 1000;
@@ -203,6 +232,7 @@ async function advance() {
       await scheduleEndAlarm(endAt);
       await disableBlocking();
       flashBadgeDone();
+      playSound();
       notify("Sesi fokus selesai — waktunya istirahat sebentar.");
     }
   } else {
@@ -213,6 +243,7 @@ async function advance() {
     await scheduleEndAlarm(endAt);
     await enableBlocking();
     flashBadgeDone();
+    playSound();
     notify("Istirahat kelar — fokus lagi!");
   }
   await updateBadge();

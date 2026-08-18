@@ -3,7 +3,7 @@
   "name": "StudyBuddy — Pomodoro & Site Blocker",
   "version": "1.0.0",
   "description": "Pomodoro timer dan pemblokir situs buat sesi fokus StudyBuddy, langsung dari toolbar Chrome.",
-  "permissions": ["storage", "alarms", "declarativeNetRequest", "notifications"],
+  "permissions": ["storage", "alarms", "declarativeNetRequest", "notifications", "offscreen"],
   "host_permissions": [
     "https://studybuddy.nurfikri.com/*",
     "https://studybuddy-blue-sigma.vercel.app/*"
