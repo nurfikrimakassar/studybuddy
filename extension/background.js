@@ -14,6 +14,7 @@ const DEFAULT_TIMER = {
   completedSessions: 0,
   endAt: null, // timestamp ms — sisa waktu dihitung dari ini, bukan decrement
   secondsLeft: 25 * 60,
+  debugPending: false, // sesi ini dipicu tombol debug — berhenti abis 1x, bukan lanjut ke istirahat
 };
 
 async function getToken() {
@@ -63,7 +64,30 @@ function notify(message) {
     iconUrl: "icons/icon128.png",
     title: "StudyBuddy",
     message,
+    priority: 2,
+    requireInteraction: true, // nggak ilang sendiri abis beberapa detik — harus di-dismiss manual
   });
+}
+
+// Kedip-kedipin badge toolbar ijo/centang beberapa detik — sinyal kedua
+// yang nggak gampang kelewat kayak notifikasi sistem (yang bisa
+// ke-suppress kalau Do Not Disturb aktif, atau kelewat kalau nggak lagi
+// liat pojok layar).
+function flashBadgeDone() {
+  let count = 0;
+  const flash = setInterval(() => {
+    count += 1;
+    if (count % 2 === 1) {
+      chrome.action.setBadgeText({ text: "✓" });
+      chrome.action.setBadgeBackgroundColor({ color: "#4E6B4A" });
+    } else {
+      chrome.action.setBadgeText({ text: "" });
+    }
+    if (count >= 6) {
+      clearInterval(flash);
+      updateBadge();
+    }
+  }, 400);
 }
 
 async function updateBadge() {
@@ -136,6 +160,7 @@ async function resetTimer() {
     mode: "focus",
     round: 1,
     completedSessions: 0,
+    debugPending: false,
     endAt: null,
     secondsLeft: timer.focusMin * 60,
   });
@@ -154,12 +179,13 @@ async function logSession(durationMinutes) {
   }
 }
 
-async function advance({ debugPause = false } = {}) {
+async function advance() {
   const timer = await getTimer();
 
   if (timer.mode === "focus") {
     logSession(timer.focusMin);
 
+    const debugPause = timer.debugPending;
     const newCompleted = timer.completedSessions + 1;
     const targetReached = !debugPause && timer.totalSessions > 0 && newCompleted >= timer.totalSessions;
     const nextMode = timer.round % 4 === 0 ? "long" : "short";
@@ -167,15 +193,17 @@ async function advance({ debugPause = false } = {}) {
 
     if (debugPause || targetReached) {
       await chrome.alarms.clear(ALARM_NAME);
-      await setTimer({ running: false, mode: nextMode, secondsLeft: nextSeconds, endAt: null, completedSessions: newCompleted });
+      await setTimer({ running: false, mode: nextMode, secondsLeft: nextSeconds, endAt: null, completedSessions: newCompleted, debugPending: false });
       await disableBlocking();
+      flashBadgeDone();
       notify(debugPause ? "🐞 Sesi tes selesai & tersimpan." : "🎉 Semua sesi selesai, kerja bagus!");
     } else {
       const endAt = Date.now() + nextSeconds * 1000;
       await setTimer({ mode: nextMode, secondsLeft: nextSeconds, endAt, completedSessions: newCompleted });
       await scheduleEndAlarm(endAt);
       await disableBlocking();
-      notify("Waktunya istirahat sebentar.");
+      flashBadgeDone();
+      notify("Sesi fokus selesai — waktunya istirahat sebentar.");
     }
   } else {
     const nextRound = timer.mode === "long" ? 1 : timer.round + 1;
@@ -184,6 +212,7 @@ async function advance({ debugPause = false } = {}) {
     await setTimer({ mode: "focus", round: nextRound, secondsLeft: nextSeconds, endAt });
     await scheduleEndAlarm(endAt);
     await enableBlocking();
+    flashBadgeDone();
     notify("Istirahat kelar — fokus lagi!");
   }
   await updateBadge();
@@ -196,6 +225,7 @@ async function applyDurations({ focusMin, shortMin, longMin, totalSessions }) {
     mode: "focus",
     round: 1,
     completedSessions: 0,
+    debugPending: false,
     endAt: null,
     focusMin,
     shortMin,
@@ -210,7 +240,7 @@ async function applyDurations({ focusMin, shortMin, longMin, totalSessions }) {
 async function debugFastForward() {
   const timer = await getTimer();
   const endAt = Date.now() + 5000;
-  await setTimer({ secondsLeft: 5, endAt, running: true });
+  await setTimer({ secondsLeft: 5, endAt, running: true, debugPending: true });
   await scheduleEndAlarm(endAt);
   if (timer.mode === "focus") await enableBlocking();
   await updateBadge();
@@ -219,7 +249,7 @@ async function debugFastForward() {
 // --- Wiring ---
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === ALARM_NAME) advance({ debugPause: false });
+  if (alarm.name === ALARM_NAME) advance();
 });
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -242,7 +272,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           sendResponse({ timer: await getTimer() });
           break;
         case "SKIP":
-          await advance({ debugPause: false });
+          await advance();
           sendResponse({ timer: await getTimer() });
           break;
         case "DEBUG_FAST":

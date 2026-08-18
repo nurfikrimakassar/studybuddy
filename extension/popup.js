@@ -1,6 +1,12 @@
 const root = document.getElementById("root");
 let tickTimer = null;
 
+const LOGO_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+  <rect x="3.8" y="4.6" width="6" height="14.8" rx="3" fill="#EFEBFB" />
+  <rect x="14.2" y="4.6" width="6" height="14.8" rx="3" fill="#EFEBFB" />
+  <rect x="8.6" y="7" width="6.8" height="2.8" rx="1.4" fill="#EFEBFB" />
+</svg>`;
+
 function sendMessage(type, payload) {
   return chrome.runtime.sendMessage({ type, payload });
 }
@@ -55,7 +61,7 @@ function renderConnect(errorMessage) {
   if (tickTimer) clearInterval(tickTimer);
   root.innerHTML = `
     <div class="brand">
-      <div class="box"></div>
+      <div class="box">${LOGO_SVG}</div>
       <span class="name">StudyBuddy</span>
     </div>
     <div class="card connect">
@@ -101,7 +107,7 @@ async function renderMain(me) {
   root.innerHTML = `
     <div class="row" style="margin-bottom:14px;">
       <div class="brand" style="margin:0;">
-        <div class="box"></div>
+        <div class="box">${LOGO_SVG}</div>
         <span class="name">StudyBuddy</span>
       </div>
       <span class="status" style="background:${timer.running ? "#F1F6EF" : "#F3F1FA"}; color:${timer.running ? "#4E6B4A" : "#7A7593"};">
@@ -182,6 +188,13 @@ async function renderMain(me) {
       const s = computeSecondsLeft(timer);
       const el = document.getElementById("time-display");
       if (el) el.textContent = formatTime(s);
+      // Sesi kelar sementara popup lagi kebuka — background.js yang beneran
+      // proses transisinya (lewat alarm), di sini cuma re-render abis kasih
+      // sedikit jeda biar background udah sempet update storage-nya dulu.
+      if (s <= 0) {
+        clearInterval(tickTimer);
+        setTimeout(() => renderMain(me), 400);
+      }
     }, 1000);
   }
 }
