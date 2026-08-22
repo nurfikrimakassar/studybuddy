@@ -118,6 +118,33 @@ async function playSound() {
   }
 }
 
+// Jendela popup kecil yang beneran nongol di layar (bukan cuma notifikasi
+// sistem yang gampang ke-suppress) — dipakai spesifik pas 1 sesi FOKUS
+// selesai, momen yang paling pengen "kentara".
+async function showCompletionPopup({ emoji, title, message }) {
+  const qs = new URLSearchParams({ emoji, title, message }).toString();
+  const width = 360;
+  const height = 420;
+  let left = 100;
+  let top = 100;
+  try {
+    const current = await chrome.windows.getCurrent();
+    left = Math.round((current.left ?? 0) + (current.width ?? width) / 2 - width / 2);
+    top = Math.round((current.top ?? 0) + (current.height ?? height) / 2 - height / 2);
+  } catch {
+    // fallback ke posisi default kalau nggak bisa baca window aktif
+  }
+  chrome.windows.create({
+    url: `complete.html?${qs}`,
+    type: "popup",
+    width,
+    height,
+    left,
+    top,
+    focused: true,
+  });
+}
+
 async function updateBadge() {
   const timer = await getTimer();
   if (!timer.running) {
@@ -226,6 +253,11 @@ async function advance() {
       flashBadgeDone();
       playSound();
       notify(debugPause ? "🐞 Sesi tes selesai & tersimpan." : "🎉 Semua sesi selesai, kerja bagus!");
+      showCompletionPopup(
+        debugPause
+          ? { emoji: "🐞", title: "Sesi tes selesai!", message: "Tersimpan ke akun kamu." }
+          : { emoji: "🎉", title: "Semua sesi selesai!", message: `${newCompleted} sesi fokus kelar hari ini. Kerja bagus!` }
+      );
     } else {
       const endAt = Date.now() + nextSeconds * 1000;
       await setTimer({ mode: nextMode, secondsLeft: nextSeconds, endAt, completedSessions: newCompleted });
@@ -234,6 +266,7 @@ async function advance() {
       flashBadgeDone();
       playSound();
       notify("Sesi fokus selesai — waktunya istirahat sebentar.");
+      showCompletionPopup({ emoji: "✅", title: "Sesi fokus selesai!", message: "Waktunya istirahat sebentar." });
     }
   } else {
     const nextRound = timer.mode === "long" ? 1 : timer.round + 1;

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>StudyBuddy</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Manrope', sans-serif;
+    background: #FAF8FC;
+  }
+  #confetti { position: fixed; inset: 0; pointer-events: none; }
+  .confetti-piece { position: absolute; top: -12px; border-radius: 2px; }
+  .wrap { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px; }
+  .card { background: #fff; border-radius: 20px; padding: 32px 26px; text-align: center; box-shadow: 0 20px 40px -16px rgba(30,27,51,0.25); }
+  .emoji { font-size: 2.4rem; margin-bottom: 6px; }
+  h1 { font-size: 1.15rem; margin: 0 0 8px; color: #1E1B33; }
+  p { font-size: 0.85rem; color: #514C6B; margin: 0 0 22px; line-height: 1.5; }
+  button { border: none; background: #3A3170; color: #fff; font-weight: 700; font-size: 0.85rem; padding: 11px 26px; border-radius: 12px; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+  <div id="confetti"></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="emoji" id="emoji">🎉</div>
+      <h1 id="title">Sesi selesai!</h1>
+      <p id="message">Kerja bagus.</p>
+      <button id="close-btn">Tutup</button>
+    </div>
+  </div>
+  <script src="complete.js"></script>
+</body>
+</html>
